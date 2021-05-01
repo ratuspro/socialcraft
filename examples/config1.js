@@ -62,23 +62,23 @@
     ],
     agents: [
         {
-            name: "Jane Doe",
+            name: "Jane_Doe",
             identities: ["Eat","Sleep"],
             knowledge_base: [
-                {"hunger": 100},
-                {"hunger_threshold": 60},
-                {"favourite_food": "carrot"},
-                {"energy": 50},
-                {"energy_threshold": 30},
+                {"hunger": 100,
+                "hunger_threshold": 60,
+                "favourite_food": "carrot",
+                "energy": 50,
+                "energy_threshold": 30},
             ]
         }, {
-            name: "John Doe",
+            name: "John_Doe",
             identities: ["Lumberjack","Sleep"],
             knowledge_base: [
-                {"energy": 50},
-                {"energy_threshold": 30},
-                {"wood_stock": 0},
-                {"favourite_wood": "oak"}
+                {"energy": 50,
+                "energy_threshold": 30,
+                "wood_stock": 0,
+                "favourite_wood": "oak"},
             ]
         }
     ]
