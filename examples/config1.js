@@ -7,6 +7,7 @@
 /* - Jane Doe: has the identities Eat and Sleep and her favourite food is carrots
 /* - John Doe: has the identities Sleep and Lumberjack and his favourite wood is oak
 */
+const {Vec3} = require('vec3')
 
  const config = {
     identities: [
@@ -18,7 +19,7 @@
             },
             salience: [
                 function(KB) {
-                    return Math.min(0,KB.getValue("energy_threshold") - KB.getValue("energy"));
+                    return Math.max(0,(KB.getValue("energy_threshold") - KB.getValue("energy"))/KB.getValue("energy_threshold"));
                 }
             ],
             execute: function (KB) {
@@ -32,10 +33,10 @@
             },
             salience: [
                 function(KB) {
-                    return Math.min(0,KB.getValue("hunger_threshold") - KB.getValue("hunger"));
+                    return Math.max(0,(KB.getValue("hunger") - KB.getValue("hunger_threshold"))/KB.getValue("hunger"));
                 },
                 function(KB) {
-                    return KB.wasPerceived(KB.getValue("favourite_food") * 1.0);
+                    return KB.wasPerceived(KB.getValue("favourite_food")) * 1.0;
                 }
             ],
             execute: function (KB) {
@@ -49,10 +50,10 @@
             },
             salience: [
                 function(KB) {
-                    return (KB.getValue("wood_stock") > 0 ? 0.5 : 0);
+                    return (KB.getValue("wood_stock") > 0 ? 0 : 0.5);
                 },
                 function(KB) {
-                    return KB.wasPerceived(KB.getValue("favourite_oak") * 0.8);
+                    return KB.wasPerceived(KB.getValue("favourite_oak")) * 1.0;
                 }
             ],
             execute: function (KB) {
@@ -64,22 +65,38 @@
         {
             name: "Jane_Doe",
             identities: ["Eat","Sleep"],
-            knowledge_base: [
-                {"hunger": 100,
+            knowledge_base:{
+                "bed" : new Vec3(-176,72,211),
+                "hunger": 100,
                 "hunger_threshold": 60,
                 "favourite_food": "carrot",
                 "energy": 50,
-                "energy_threshold": 30},
-            ]
+                "energy_threshold": 30,
+                getValue: function(varName) {
+                    if(varName in this) return this[varName]
+                    else return null
+                },
+                wasPerceived: function(varName){
+                    return 1 //como é que integro isto com as percecoes dos bots?
+                },
+            },
         }, {
             name: "John_Doe",
             identities: ["Lumberjack","Sleep"],
-            knowledge_base: [
-                {"energy": 50,
+            knowledge_base:{
+                "bed" : new Vec3(-159,72,223),
+                "energy": 50,
                 "energy_threshold": 30,
                 "wood_stock": 0,
-                "favourite_wood": "oak"},
-            ]
+                "favourite_wood": "oak",
+                getValue: function(varName) {
+                    if(varName in this) return this[varName]
+                    else return null
+                },
+                wasPerceived: function(varName){
+                    return 1 //como é que integro isto com as percecoes dos bots?
+                },
+            }
         }
     ]
 }
