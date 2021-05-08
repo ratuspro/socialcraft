@@ -7,12 +7,8 @@
     "example": "examples"
   },
   "scripts": {
-    "start": "run-s tab:launch:Jane_Doe tab:launch:John_Doe",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "launch:Jane_Doe": "node agents.js Jane_Doe",
-    "tab:launch:Jane_Doe": "wttab -t Jane_Doe npm run launch:Jane_Doe",
-    "launch:John_Doe": "node agents.js John_Doe",
-    "tab:launch:John_Doe": "wttab -t John_Doe npm run launch:John_Doe"
+    "start" : "node ./index_workers.js ./examples/config1.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

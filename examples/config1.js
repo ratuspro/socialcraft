@@ -8,6 +8,7 @@
 /* - John Doe: has the identities Sleep and Lumberjack and his favourite wood is oak
 */
 const {Vec3} = require('vec3')
+const BoundingBox = require('../BoundingBox')
 
  const config = {
     identities: [
@@ -63,10 +64,9 @@ const {Vec3} = require('vec3')
     ],
     agents: [
         {
-            name: "Jane_Doe",
+            name: "Jane Doe",
             identities: ["Eat","Sleep"],
             knowledge_base:{
-                "bed" : new Vec3(-176,72,211),
                 "hunger": 100,
                 "hunger_threshold": 60,
                 "favourite_food": "carrot",
@@ -81,10 +81,9 @@ const {Vec3} = require('vec3')
                 },
             },
         }, {
-            name: "John_Doe",
+            name: "John Doe",
             identities: ["Lumberjack","Sleep"],
             knowledge_base:{
-                "bed" : new Vec3(-159,72,223),
                 "energy": 50,
                 "energy_threshold": 30,
                 "wood_stock": 0,
@@ -97,6 +96,13 @@ const {Vec3} = require('vec3')
                     return 1 //como é que integro isto com as percecoes dos bots?
                 },
             }
+        }
+    ],
+    houses: [
+        {
+            agents : ["Jane Doe"],
+            bbox : new BoundingBox(new Vec3(-169,71,206), new Vec3(-182,77,216)),
+            beds : [new Vec3(-176,72,211)], //devia estar na KB dos agentes?
         }
     ]
 }

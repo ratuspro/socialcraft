@@ -1,0 +1,1 @@
+Powershell -noexit -Command "node CLI.js"
