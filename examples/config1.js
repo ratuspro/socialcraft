@@ -19,12 +19,12 @@ const BoundingBox = require('../BoundingBox')
                 optional: []
             },
             salience: [
-                function(KB) {
-                    return Math.max(0,(KB.getValue("energy_threshold") - KB.getValue("energy"))/KB.getValue("energy_threshold"));
+                function() {
+                    return Math.max(0,(this.KB.getValue("energy_threshold") - this.KB.getValue("energy"))/this.KB.getValue("energy_threshold"));
                 }
             ],
-            execute: function (KB) {
-                //TODO: Implement Game Logic
+            execute: function () {
+                console.log("sleeping")
             }
         }, {
             name: "Eat",
@@ -33,15 +33,15 @@ const BoundingBox = require('../BoundingBox')
                 optional: ["favourite_food"]
             },
             salience: [
-                function(KB) {
-                    return Math.max(0,(KB.getValue("hunger") - KB.getValue("hunger_threshold"))/KB.getValue("hunger"));
+                function() {
+                    return Math.max(0,(this.KB.getValue("hunger") - this.KB.getValue("hunger_threshold"))/this.KB.getValue("hunger"));
                 },
-                function(KB) {
-                    return KB.wasPerceived(KB.getValue("favourite_food")) * 1.0;
+                function() {
+                    return this.KB.wasPerceived(this.KB.getValue("favourite_food")) * 1.0;
                 }
             ],
-            execute: function (KB) {
-                //TODO: Implement Game Logic
+            execute: function () {
+                console.log("eating food")
             }
         },{
             name: "Lumberjack",
@@ -50,15 +50,15 @@ const BoundingBox = require('../BoundingBox')
                 optional : ["favourite_wood"]
             },
             salience: [
-                function(KB) {
-                    return (KB.getValue("wood_stock") > 0 ? 0 : 0.5);
+                function() {
+                    return (this.KB.getValue("wood_stock") > 0 ? 0 : 0.5);
                 },
-                function(KB) {
-                    return KB.wasPerceived(KB.getValue("favourite_oak")) * 1.0;
+                function() {
+                    return this.KB.wasPerceived(this.KB.getValue("favourite_oak")) * 1.0;
                 }
             ],
-            execute: function (KB) {
-                //TODO: Implement Game Logic
+            execute: function () {
+                console.log("chopping wood")
             }
         }
     ],

@@ -1,11 +1,13 @@
 const { fork } = require('child_process');
 
 const readline = require('readline');
+const colours = require('./utils')
 
 const main = fork("./index_workers.js", ["./examples/config1.js"])
+ 
 
 main.on('message', message => {
-  console.log('message from child:', message);  // Receiving message from fork process
+    //Receive message from child
 });
 
 function askQuestion(query) {
@@ -20,16 +22,17 @@ function askQuestion(query) {
     }))
 }
 
-setTimeout(async() => 
-    {
-        while(true){
-            const ans = await askQuestion("Write any command [FORMAT : (target) | (command)]: ")
-            if(ans){
-                const command = ans.split('|')
-                if(command.length == 2){
-                    main.send({target:command[0].trimEnd().trimStart(), command:command[1].trimEnd().trimStart()}) //////////////////// Send message to the fork process
-                }
+setTimeout(async() => {
+    while(true){
+        const ans = await askQuestion(colours.blue + "Write any command " + colours.normal + "[" + colours.green + "FORMAT: (Target)|(KB Property) (Value)" + colours.normal + "]: ")
+        if(ans){
+            const command = ans.split('|')
+            if(command.length == 2){
+                main.send({target:command[0].trimEnd().trimStart(), command:command[1].trimEnd().trimStart()}) //////////////////// Send message to the fork process
             }
-        }
+            else{
+                console.error(colours.red, "Poorly formatted input.")
+            }
+        } 
     }
-, 1000)
+}, 1000)

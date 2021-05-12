@@ -1,5 +1,6 @@
 const mineflayer = require('mineflayer')
 const {Vec3} = require('vec3')
+const colours = require('./utils')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 
 class Agent{
@@ -45,15 +46,27 @@ class Agent{
         let biggestSalienceValue = -1
         for(let i=0; i < this.possibleIdentities.length; i++){
             for(let j=0; j < this.possibleIdentities[i]["salience"].length; j++){
-                let salianceValue = this.possibleIdentities[i]["salience"][j].call(this, this.KB)
+                let salianceValue = this.possibleIdentities[i]["salience"][j].call(this)
                 if(salianceValue >= biggestSalienceValue){
                     biggestSalienceValue = salianceValue
                     mostSalientIdentity = this.possibleIdentities[i]
                 }
             }
         }
-        console.log(mostSalientIdentity)
         this.mostSalientIdentity = mostSalientIdentity
+    }
+
+    debug(){
+        this.mostSalientIdentity.execute.call(this)
+    }
+
+    setKBValue(property, value){
+        console.log(this.KB)
+        if(property in this.KB)
+            this.KB[property] = value
+        else
+            console.error(colours.red + "That property is not a part of the KB." + colours.normal)
+        console.log(this.KB)
     }
 
     connect(){
@@ -72,7 +85,7 @@ class Agent{
                 ()=>{}
             }
             else{
-                this.mostSalientIdentity.execute.call(this, this.KB)
+                this.mostSalientIdentity.execute.call(this)
             }
         })
     }
