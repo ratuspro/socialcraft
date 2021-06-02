@@ -88,8 +88,8 @@ class Agent{
 
     setKBValue(property, value){
         //process.stdout.write(JSON.stringify(this.kb, null, 2))
-        if(property in this.kb)
-            this.kb[property] = value
+        if(this.get_knowledge_base.inKB(property))
+            this.kb.set_kb(property, value)
         else
             process.stderr.write(colours.red + "That property is not a part of the KB." + colours.normal)
         //process.stdout.write(JSON.stringify(this.kb, null, 2))

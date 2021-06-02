@@ -3,6 +3,14 @@ class KB{
         this.knowledge_base = data
     }
 
+    get get_kb(){
+        return this.knowledge_base
+    }
+
+    set_kb(prop, value){
+        this.knowledge_base[prop] = value
+    }
+
     inKB(varName){
         if(varName in this.knowledge_base){
             return true
