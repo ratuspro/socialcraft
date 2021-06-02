@@ -9,13 +9,13 @@ const agentName = workerData.agentName
 
 const agent = new Agent(configFilePath, agentName)
 
-
 parentPort.on("message", message => {
     //messageFromParent
     let com = message.command
     let splittedCom = com.split(' ')
     if(splittedCom.length == 2){
         agent.setKBValue(splittedCom[0], splittedCom[1])
+        agent.debug()
     }
     else{
         process.stderr.write(colours.red + "Poorly formatted command")
@@ -23,5 +23,4 @@ parentPort.on("message", message => {
     // GET THE COMMAND FROM THE OBJECT; PARSE IT; CHANGE THE KB OF THE BOT, FOR EXAMPLE
 })
 
-agent.debug()
-agent.connect()
+setTimeout(()=>agent.start(), 1000)
