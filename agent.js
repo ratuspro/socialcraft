@@ -32,6 +32,9 @@ class Agent{
             username: this.agentName,
         })
         this.bot.loadPlugin(pathfinder)
+        
+        this.kb.set_kb('bot', this.bot)
+        this.kb.set_kb('name', this.agentName)
 
         this.bot.on('chat', (username,message) => {
             if(username === this.aName) return
@@ -297,6 +300,16 @@ class Agent{
         this.bot.on('time', async() =>{
             let currentActivity = this.mostSalientIdentity
             this.getMostSalientIdentity()
+            this.kb.updateTime()
+
+            if(this.kb.getValue('energy') > 0){
+                this.kb.set_kb('energy', this.kb.getValue('energy') - 1)
+            }
+
+            
+            if(this.kb.getValue('hunger') < 1000){
+                this.kb.set_kb('hunger', this.kb.getValue('hunger') + 1)
+            }
 
             if(currentActivity == this.mostSalientIdentity){
                 //console.log("NOOP")

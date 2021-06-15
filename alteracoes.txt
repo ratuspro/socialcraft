@@ -1,7 +1,0 @@
-propor alterações às saliencias e à função waspercieved
-
-
-
-dividir waspercieved em waspercievedNEIGHBOURHOOD e em waspercievedINVENTORY
-Por cenas para o KB
-Alterar as funcoes de saliencias
