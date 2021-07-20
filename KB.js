@@ -56,10 +56,10 @@ class KB{
             return 0
         }
     }
-    hasAgentsVicinity(){
+    agentsVicinity(){
         let kb = this.knowledge_base
         let players = this.knowledge_base["bot"].players
-        let flag = 0
+        let nearbyPlayers = []
         Object.keys(players).forEach(function(key){
             let value = players[key]
             if(key != kb["name"]){
@@ -67,20 +67,25 @@ class KB{
                 const otherPos = value.entity.position
                 let distance = Math.sqrt( (Math.pow((myPos.x - otherPos.x), 2)) + (Math.pow((myPos.y - otherPos.y), 2)) + (Math.pow((myPos.z - otherPos.z), 2)) )
                 if(distance < 15){
-                    flag = 1
+                    nearbyPlayers.push(value)
                 }
             }
         })
-        if(flag = 1){
-            return 1
-        }
-        else{
-            return 0
-        }
+        return nearbyPlayers
+    }
+
+    isFriendInVicinity(){
+        let agentsInVicinity = this.agentsVicinity()
+        agentsInVicinity.forEach((ag) => {
+            if(this.getValue("friend_list").includes(ag.username)){
+                return 1
+            }
+        })
+        return 0
     }
 
     isNightTime(){
-        if(this.getValue('time') < 2000 || this.getValue('time') > 22000){
+        if(this.getValue('time') < 0 || this.getValue('time') > 14000){
             return 1
         }
         else{

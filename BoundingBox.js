@@ -1,3 +1,5 @@
+const {Vec3} = require('vec3')
+
 class BoundingBox{
     constructor(p1, p2){
         this.xMin = this.maxMinAxis("min", "x", p1, p2)
@@ -6,6 +8,7 @@ class BoundingBox{
         this.yMax = this.maxMinAxis("max", "y", p1, p2)
         this.zMin = this.maxMinAxis("min", "z", p1, p2)
         this.zMax = this.maxMinAxis("max", "z", p1, p2)
+        this.pointsGiven = []
     }
 
     maxMinAxis(maxOrMin, axis, vec1, vec2){
@@ -42,6 +45,28 @@ class BoundingBox{
             }
         }
         return false
+    }
+
+    randomPointInBBox(){
+        var x = Math.random() * (this.xMax - this.xMin) + this.xMin
+        var y = Math.random() * (this.yMax - this.yMin) + this.yMin
+        var z = Math.random() * (this.zMax - this.zMin) + this.zMin
+        return new Vec3(x,y,z)
+    }
+
+    randomPointNotChosen(){
+        var x = Math.random() * (this.xMax - this.xMin) + this.xMin
+        var y = Math.random() * (this.yMax - this.yMin) + this.yMin
+        var z = Math.random() * (this.zMax - this.zMin) + this.zMin
+        let pointToGive = new Vec3(x,y,z)
+        while(this.pointsGiven.includes(pointToGive)){
+            x = Math.random() * (this.xMax - this.xMin) + this.xMin
+            y = Math.random() * (this.yMax - this.yMin) + this.yMin
+            z = Math.random() * (this.zMax - this.zMin) + this.zMin
+            pointToGive = new Vec3(x,y,z)
+        }
+        this.pointsGiven.push(pointToGive)
+        return pointToGive
     }
 }
 

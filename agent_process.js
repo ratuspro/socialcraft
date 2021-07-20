@@ -1,6 +1,7 @@
 const { workerData, parentPort } = require('worker_threads')
 const Agent = require('./agent')
 const { agents } = require('./examples/config1')
+const {Vec3} = require('vec3')
 const colours = require('./utils')
 
 
@@ -23,4 +24,11 @@ parentPort.on("message", message => {
     // GET THE COMMAND FROM THE OBJECT; PARSE IT; CHANGE THE KB OF THE BOT, FOR EXAMPLE
 })
 
-setTimeout(()=>agent.start(), 1000)
+setTimeout(()=>{
+    agent.bot.chat("/home")
+    agent.bot.chat("/gamemode survival")
+}, 5000)
+
+setTimeout(()=>{
+    agent.start()
+}, 8000)
