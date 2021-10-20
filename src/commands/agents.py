@@ -1,6 +1,6 @@
 import typer
 import random
-from agentDispatcher import create_agent, delete_agent, list_agents
+from core import create_agent, delete_agent, list_agents
 
 app = typer.Typer()
 
