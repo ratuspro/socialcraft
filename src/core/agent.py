@@ -24,7 +24,7 @@ def create_agent(name: str):
 def get_all_agents():
     client = connect_to_docker()
     containers = client.containers.list(
-        filters={'label': ["socialcraft_agent"]})
+        all=True, filters={'label': ["socialcraft_agent"]})
     return containers
 
 
