@@ -1,6 +1,5 @@
 import typer
-import random
-from core import create_agent, delete_agent, list_agents
+from core import create_agent, delete_agent, get_all_agents
 
 app = typer.Typer()
 
@@ -12,7 +11,8 @@ def create(agent_name: str):
 
 @app.command()
 def list():
-    list_agents()
+    for container in get_all_agents():
+        typer.echo(container)
 
 
 @app.command()
