@@ -1,5 +1,6 @@
 import docker
 from docker import client
+import pathlib
 
 
 def connect_to_docker():
@@ -14,7 +15,9 @@ def get_container(name: str, client: docker.DockerClient):
 
 def create_agent(name: str):
     client = connect_to_docker()
-    client.containers.create('ubuntu',
+    path = pathlib.Path(pathlib.Path().resolve(), "example/images/simple_bot/")
+    image = client.images.build(path=str(path))
+    client.containers.create(image[0],
                              'sleep 300',
                              name=name,
                              labels=["socialcraft_agent"],
