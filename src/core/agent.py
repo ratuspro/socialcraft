@@ -1,101 +1,56 @@
 '''
-This module defines the AgentManager class
+This module defines an Agent and the respective types (AgentStatus)
 '''
-import pathlib
-import docker
+from enum import Enum
+from docker.models.containers import Container
 
 
-class AgentManager:
+class AgentStatus(Enum):
     '''
-    The AgentManager class supervises the deployment of agents
+    The status of an agent
     '''
-    def __init__(self):
-        pass
+    OFFLINE = 1
+    ONLINE = 2
+    PAUSED = 3
 
-    def __get_docker_client(self):
-        return docker.from_env()
 
-    def __get_docker_container(self, name: str):
-        return self.__get_docker_client().containers.get(name)
+class Agent:
+    '''
+    The Agent class is a proxy to control the agent
+    '''
+    def __init__(self, container: Container):
+        self.__container = container
 
-    def list_agents(self):
-        '''
-        List all the agents available
-        '''
-        return self.__get_docker_client().containers.list(
-            all=True, filters={'label': ["socialcraft_agent"]})
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Container):
+            return False
 
-    def create_agent(self, name: str):
-        '''
-        Creates a new agent based on a previously created prototype
-        '''
-        path = pathlib.Path(pathlib.Path().resolve(),
-                            "example/images/simple_bot/")
-        image = self.__get_docker_client().images.build(path=str(path))
-        self.__get_docker_client().containers.create(
-            image[0],
-            'sleep 300',
-            name=name,
-            labels=["socialcraft_agent"],
-            detach=True)
+        return self.id == other.id
 
-    def kill_agent(self, name: str):
+    @property
+    def status(self):
         '''
-        Permanentely kills an agent and destroys all associated data
+        The status of the agent
         '''
-        try:
-            container = self.__get_docker_container(name)
-            container.remove(force=True)
+        if self.__container.status == 'created' or self.__container.status == 'restarting' or self.__container.status == 'removing' or self.__container.status == 'exited':
+            return AgentStatus.OFFLINE
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        if self.__container.status == 'running':
+            return AgentStatus.ONLINE
 
-    def deploy_agent(self, name: str):
-        '''
-        Deploys a previously created agent to the Minecraft Server
-        '''
-        try:
-            self.__get_docker_container(name).start()
+        if self.__container.status == 'paused':
+            return AgentStatus.PAUSED
 
-        except docker.errors.NotFound:
-            print("Agent not found")
-
-    def withdraw_agent(self, name: str):
+    @property
+    def name(self):
         '''
-        Withdraws a previously deployed agent from the Minecraft Server
+        The name of the agent
         '''
-        try:
-            self.__get_docker_container(name).stop()
+        return self.__container.name
 
-        except docker.errors.NotFound:
-            print("Agent not found")
-
-    def pause_agent(self, name: str):
+    @property
+    def id(self):
         '''
-        Pauses a previously deployed agent execution
+        The agent's identifier
         '''
-        try:
-            self.__get_docker_container(name).pause()
-
-        except docker.errors.NotFound:
-            print("Agent not found")
-
-    def resume_agent(self, name: str):
-        '''
-        Resumes a previously paused agent
-        '''
-        try:
-            self.__get_docker_container(name).unpause()
-
-        except docker.errors.NotFound:
-            print("Agent not found")
-
-    def get_agent(self, name: str):
-        '''
-        Retrieves the agent with 'name' 
-        '''
-        try:
-            return self.__get_docker_container(name)
-
-        except docker.errors.NotFound:
-            print("Agent not found")
+        return self.__container.id

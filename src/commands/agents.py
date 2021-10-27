@@ -21,16 +21,11 @@ def list():
     """
     List all the agents 
     """
-    containers = manager.get_all_agents()
-    table = [[
-        container.name, container.status, container.labels,
-        container.attrs['Config']['Env']
-    ] for container in containers]
+    agents = manager.get_all_agents()
+    table = [[agent.name, agent.status] for agent in agents]
 
     typer.echo(
-        tabulate(table,
-                 headers=["Name", "Status", "Labels", "Env"],
-                 tablefmt="fancy_grid"))
+        tabulate(table, headers=["Name", "Status"], tablefmt="fancy_grid"))
 
 
 @app.command()
