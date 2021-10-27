@@ -1,81 +1,101 @@
-import docker
-from docker import client
+'''
+This module defines the AgentManager class
+'''
 import pathlib
+import docker
 
 
-def connect_to_docker():
-    client = docker.from_env()
-    return client
+class AgentManager:
+    '''
+    The AgentManager class supervises the deployment of agents
+    '''
+    def __init__(self):
+        pass
 
+    def __get_docker_client(self):
+        return docker.from_env()
 
-def get_container(name: str, client: docker.DockerClient):
-    container = client.containers.get(name)
-    return container
+    def __get_docker_container(self, name: str):
+        return self.__get_docker_client().containers.get(name)
 
+    def list_agents(self):
+        '''
+        List all the agents available
+        '''
+        return self.__get_docker_client().containers.list(
+            all=True, filters={'label': ["socialcraft_agent"]})
 
-def create_agent(name: str):
-    client = connect_to_docker()
-    path = pathlib.Path(pathlib.Path().resolve(), "example/images/simple_bot/")
-    image = client.images.build(path=str(path))
-    client.containers.create(image[0],
-                             'sleep 300',
-                             name=name,
-                             labels=["socialcraft_agent"],
-                             detach=True)
+    def create_agent(self, name: str):
+        '''
+        Creates a new agent based on a previously created prototype
+        '''
+        path = pathlib.Path(pathlib.Path().resolve(),
+                            "example/images/simple_bot/")
+        image = self.__get_docker_client().images.build(path=str(path))
+        self.__get_docker_client().containers.create(
+            image[0],
+            'sleep 300',
+            name=name,
+            labels=["socialcraft_agent"],
+            detach=True)
 
+    def kill_agent(self, name: str):
+        '''
+        Permanentely kills an agent and destroys all associated data
+        '''
+        try:
+            container = self.__get_docker_container(name)
+            container.remove(force=True)
 
-def get_all_agents():
-    client = connect_to_docker()
-    containers = client.containers.list(
-        all=True, filters={'label': ["socialcraft_agent"]})
-    return containers
+        except docker.errors.NotFound:
+            print("Agent not found")
 
+    def deploy_agent(self, name: str):
+        '''
+        Deploys a previously created agent to the Minecraft Server
+        '''
+        try:
+            self.__get_docker_container(name).start()
 
-def deploy_agent(name: str):
-    client = connect_to_docker()
-    try:
-        container = get_container(name, client)
-        container.start()
+        except docker.errors.NotFound:
+            print("Agent not found")
 
-    except docker.errors.NotFound:
-        print("Agent not found")
+    def withdraw_agent(self, name: str):
+        '''
+        Withdraws a previously deployed agent from the Minecraft Server
+        '''
+        try:
+            self.__get_docker_container(name).stop()
 
+        except docker.errors.NotFound:
+            print("Agent not found")
 
-def pause_agent(name: str):
-    client = connect_to_docker()
-    try:
-        container = get_container(name, client)
-        container.pause()
+    def pause_agent(self, name: str):
+        '''
+        Pauses a previously deployed agent execution
+        '''
+        try:
+            self.__get_docker_container(name).pause()
 
-    except docker.errors.NotFound:
-        print("Agent not found")
+        except docker.errors.NotFound:
+            print("Agent not found")
 
+    def resume_agent(self, name: str):
+        '''
+        Resumes a previously paused agent
+        '''
+        try:
+            self.__get_docker_container(name).unpause()
 
-def resume_agent(name: str):
-    client = connect_to_docker()
-    try:
-        container = get_container(name, client)
-        container.unpause()
+        except docker.errors.NotFound:
+            print("Agent not found")
 
-    except docker.errors.NotFound:
-        print("Agent not found")
+    def get_agent(self, name: str):
+        '''
+        Retrieves the agent with 'name' 
+        '''
+        try:
+            return self.__get_docker_container(name)
 
-
-def kill_agent(name: str):
-    client = connect_to_docker()
-    try:
-        container = get_container(name, client)
-        container.stop()
-
-    except docker.errors.NotFound:
-        print("Agent not found")
-
-
-def delete_agent(name: str):
-    client = connect_to_docker()
-    try:
-        container = get_container(name, client)
-        container.remove(force=True)
-
-    except docker.errors.NotFound:
-        print("Agent not found")
+        except docker.errors.NotFound:
+            print("Agent not found")

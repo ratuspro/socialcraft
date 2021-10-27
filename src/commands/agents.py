@@ -1,9 +1,11 @@
 from docker.types import containers
 import typer
 from tabulate import tabulate
-from core import create_agent, delete_agent, get_all_agents, deploy_agent, kill_agent, pause_agent, resume_agent
+from core import AgentManager
 
 app = typer.Typer()
+
+manager = AgentManager()
 
 
 @app.command()
@@ -11,7 +13,7 @@ def create(agent_name: str):
     """
     Create a new agent with agent_name
     """
-    create_agent(agent_name)
+    manager.create_agent(agent_name)
 
 
 @app.command()
@@ -19,7 +21,7 @@ def list():
     """
     List all the agents 
     """
-    containers = get_all_agents()
+    containers = manager.get_all_agents()
     table = [[
         container.name, container.status, container.labels,
         container.attrs['Config']['Env']
@@ -36,7 +38,7 @@ def deploy(agent_name: str):
     """
     Deploys the agent
     """
-    deploy_agent(agent_name)
+    manager.deploy_agent(agent_name)
 
 
 @app.command()
@@ -44,7 +46,7 @@ def pause(agent_name: str):
     """
     Pauses the agent
     """
-    pause_agent(agent_name)
+    manager.pause_agent(agent_name)
 
 
 @app.command()
@@ -52,23 +54,23 @@ def resume(agent_name: str):
     """
     Resumes the agent
     """
-    resume_agent(agent_name)
+    manager.resume_agent(agent_name)
+
+
+@app.command()
+def withdraw(agent_name: str):
+    """
+    Withdraw the agent
+    """
+    manager.withdraw_agent(agent_name)
 
 
 @app.command()
 def kill(agent_name: str):
     """
-    Kill the agent
+    Kills the agent and all related data
     """
-    kill_agent(agent_name)
-
-
-@app.command()
-def delete(agent_name: str):
-    """
-    Deletes the agent and all related data
-    """
-    delete_agent(agent_name)
+    manager.kill_agent(agent_name)
 
 
 if __name__ == "__main__":
