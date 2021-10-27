@@ -32,7 +32,8 @@ class Agent:
         '''
         The status of the agent
         '''
-        if self.__container.status == 'created' or self.__container.status == 'restarting' or self.__container.status == 'removing' or self.__container.status == 'exited':
+        if self.__container.status in ('created', 'restarting', 'removing',
+                                       'exited'):
             return AgentStatus.OFFLINE
 
         if self.__container.status == 'running':

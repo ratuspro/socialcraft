@@ -14,13 +14,16 @@ class AgentManager:
     The AgentManager class supervises the deployment of agents
     '''
     def __init__(self):
-        pass
+        self.__cache = AgentCache()
 
     def __get_docker_client(self) -> Optional[DockerClient]:
         return docker.from_env()
 
-    def __get_docker_container(self, name: str) -> Container:
-        return self.__get_docker_client().containers.get(name)
+    def __get_docker_container(self, name: str) -> Optional[Container]:
+        try:
+            return self.__get_docker_client().containers.get(name)
+        except docker.errors.NotFound:
+            return None
 
     def get_all_agents(self) -> list[Agent]:
         '''
@@ -32,7 +35,12 @@ class AgentManager:
         agents = []
 
         for agent_container in agent_containers:
-            agents.append(Agent(agent_container))
+            if self.__cache.has(agent_container.name):
+                agents.append(self.__cache.get(agent_container.name))
+            else:
+                agent = Agent(agent_container)
+                self.__cache.add(agent)
+                agents.append(agent)
 
         return agents
 
@@ -40,6 +48,16 @@ class AgentManager:
         '''
         Creates a new agent based on a previously created prototype
         '''
+        container = self.__get_docker_container(name)
+
+        if container is not None:
+            print(f"Agent with name '{name}' already exists.")
+            return None
+
+        # when agent does not exist and cache has an entry for it, clean cache
+        if self.__cache.has(name):
+            self.__cache.erase(name)
+
         path = pathlib.Path(pathlib.Path().resolve(),
                             "example/images/simple_bot/")
         image = self.__get_docker_client().images.build(path=str(path))
@@ -50,65 +68,171 @@ class AgentManager:
             labels=["socialcraft_agent"],
             detach=True)
 
-        return Agent(agent_container)
+        agent = Agent(agent_container)
+        self.__cache.add(agent)
+        return agent
 
     def kill_agent(self, name: str) -> None:
         '''
         Permanentely kills an agent and destroys all associated data
         '''
-        try:
-            container = self.__get_docker_container(name)
-            container.remove(force=True)
+        # UPDATE CACHE
+        #   when agent should be killed and cache has an entry for it, clean cache
+        if self.__cache.has(name):
+            self.__cache.erase(name)
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        container = self.__get_docker_container(name)
+
+        if container is None:
+            print(f"Agent with name '{name}' not found!")
+            return
+
+        container.remove(force=True)
 
     def deploy_agent(self, name: str) -> None:
         '''
         Deploys a previously created agent to the Minecraft Server
         '''
-        try:
-            self.__get_docker_container(name).start()
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        container = self.__get_docker_container(name)
+
+        if container is None:
+            # UPDATE CACHE
+            #   when container does not exist but cache has an entry for it, clean cache
+            if self.__cache.has(name):
+                self.__cache.erase(name)
+            print(f"Agent with name '{name}' not found!")
+            return
+
+        # UPDATE CACHE
+        #   when container exists but cache has no entry for it, add it to cache
+        if not self.__cache.has(name):
+            self.__cache.add(Agent(container))
+
+        container.start()
 
     def withdraw_agent(self, name: str) -> None:
         '''
         Withdraws a previously deployed agent from the Minecraft Server
         '''
-        try:
-            self.__get_docker_container(name).stop()
+        container = self.__get_docker_container(name)
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        if container is None:
+            # UPDATE CACHE
+            #   when container does not exist but cache has an entry for it, clean cache
+            if self.__cache.has(name):
+                self.__cache.erase(name)
+            print(f"Agent with name '{name}' not found!")
+            return
+
+        # UPDATE CACHE
+        #   when container exists but cache has no entry for it, add it to cache
+        if not self.__cache.has(name):
+            self.__cache.add(Agent(container))
+
+        container.stop()
 
     def pause_agent(self, name: str) -> None:
         '''
         Pauses a previously deployed agent execution
         '''
-        try:
-            self.__get_docker_container(name).pause()
+        container = self.__get_docker_container(name)
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        if container is None:
+            # UPDATE CACHE
+            #   when container does not exist but cache has an entry for it, clean cache
+            if self.__cache.has(name):
+                self.__cache.erase(name)
+            print(f"Agent with name '{name}' not found!")
+            return
+
+        # UPDATE CACHE
+        #   when container exists but cache has no entry for it, add it to cache
+        if not self.__cache.has(name):
+            self.__cache.add(Agent(container))
+
+        container.pause()
 
     def resume_agent(self, name: str) -> None:
         '''
         Resumes a previously paused agent
         '''
-        try:
-            self.__get_docker_container(name).unpause()
+        container = self.__get_docker_container(name)
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        if container is None:
+            # UPDATE CACHE
+            #   when container does not exist but cache has an entry for it, clean cache
+            if self.__cache.has(name):
+                self.__cache.erase(name)
+            print(f"Agent with name '{name}' not found!")
+            return
+
+        # UPDATE CACHE
+        #   when container exists but cache has no entry for it, add it to cache
+        if not self.__cache.has(name):
+            self.__cache.add(Agent(container))
+
+        container.unpause()
 
     def get_agent(self, name: str) -> Optional[Agent]:
         '''
         Retrieves the agent with 'name'
         '''
-        try:
-            return Agent(self.__get_docker_container(name))
+        container = self.__get_docker_container(name)
 
-        except docker.errors.NotFound:
-            print("Agent not found")
+        if container is None:
+            # UPDATE CACHE
+            #   when container does not exist but cache has an entry for it, clean cache
+            if self.__cache.has(name):
+                self.__cache.erase(name)
+            print(f"Agent with name '{name}' not found!")
+            return None
+
+        agent = Agent(Container)
+
+        # UPDATE CACHE
+        #   when container exists but cache has no entry for it, add it to cache
+        if not self.__cache.has(name):
+            self.__cache.add(agent)
+
+        return agent
+
+
+class AgentCache:
+    def __init__(self):
+        self.__cache = {}
+
+    def add(self, agent: Agent) -> str:
+        '''
+        Add agent to the cache.
+
+        returns the cache name Entry
+        '''
+        if self.has(agent.name):
+            return
+        self.__cache[agent.name] = agent
+
+        return agent.name
+
+    def get(self, name: str) -> Optional[Agent]:
+        '''
+        Retrieves the agent by name
+        '''
+        if not self.has(name):
+            return None
+        return self.__cache[name]
+
+    def has(self, name: str) -> bool:
+        '''
+        Tests if the cache has agent with 'name'
+        '''
+        return name in self.__cache
+
+    def erase(self, name: str) -> None:
+        '''
+        Remove entry with name
+        '''
+        if not self.has(name):
+            return
+
+        self.__cache.pop(name)
