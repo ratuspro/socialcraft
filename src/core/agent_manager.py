@@ -19,8 +19,11 @@ class AgentManager:
     def __get_docker_client(self) -> Optional[DockerClient]:
         return docker.from_env()
 
-    def __get_docker_container(self, name: str) -> Container:
-        return self.__get_docker_client().containers.get(name)
+    def __get_docker_container(self, name: str) -> Optional[Container]:
+        try:
+            return self.__get_docker_client().containers.get(name)
+        except docker.errors.NotFound:
+            return None
 
     def get_all_agents(self) -> list[Agent]:
         '''
