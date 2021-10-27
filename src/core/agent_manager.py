@@ -14,6 +14,7 @@ class AgentManager:
     The AgentManager class supervises the deployment of agents
     '''
     def __init__(self):
+        self.__cache = AgentCache()
         pass
 
     def __get_docker_client(self) -> Optional[DockerClient]:
@@ -50,7 +51,9 @@ class AgentManager:
             labels=["socialcraft_agent"],
             detach=True)
 
-        return Agent(agent_container)
+        agent = Agent(agent_container)
+        self.__cache.add(agent)
+        return agent
 
     def kill_agent(self, name: str) -> None:
         '''
@@ -58,6 +61,7 @@ class AgentManager:
         '''
         try:
             container = self.__get_docker_container(name)
+            self.__cache.erase(container.id)
             container.remove(force=True)
 
         except docker.errors.NotFound:
@@ -108,7 +112,52 @@ class AgentManager:
         Retrieves the agent with 'name'
         '''
         try:
-            return Agent(self.__get_docker_container(name))
+            container = self.__get_docker_container(name)
+
+            if self.__cache.has(container.id):
+                return self.__cache.get(container.id)
+
+            return Agent(container)
 
         except docker.errors.NotFound:
             print("Agent not found")
+
+
+class AgentCache:
+    def __init__(self):
+        self.__cache = {}
+
+    def add(self, agent: Agent) -> str:
+        '''
+        Add agent to the cache.
+
+        returns the cache ID Entry
+        '''
+        if self.has(agent.id):
+            return
+        self.__cache[agent.id] = agent
+
+        return agent.id
+
+    def get(self, id: str) -> Optional[Agent]:
+        '''
+        Retrieves the agent by id
+        '''
+        if not self.has(id):
+            return None
+        return self.__cache[id]
+
+    def has(self, id: str) -> bool:
+        '''
+        Tests if the cache has agent with 'id'
+        '''
+        return id in self.__cache
+
+    def erase(self, id: str) -> None:
+        '''
+        Remove entry with id
+        '''
+        if not self.has(id):
+            return
+
+        self.__cache.pop(id)
