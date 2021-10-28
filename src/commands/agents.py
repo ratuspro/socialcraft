@@ -5,7 +5,7 @@ from core import AgentManager
 
 app = typer.Typer()
 
-manager = AgentManager()
+manager = AgentManager(docker_url="npipe:////./pipe/docker_engine")
 
 
 @app.command()
