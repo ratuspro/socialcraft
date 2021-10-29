@@ -6,13 +6,12 @@ from typing import Optional
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
-from core.agent import Agent
+from .agent import Agent
 
 
 class AgentManager:
     '''
     The AgentManager class supervises the deployment of agents
-    
     '''
     def __init__(self, docker_url=None):
         self.__cache = AgentCache()
@@ -204,6 +203,9 @@ class AgentManager:
 
 
 class AgentCache:
+    """
+    Agent Cache Management
+    """
     def __init__(self):
         self.__cache = {}
 

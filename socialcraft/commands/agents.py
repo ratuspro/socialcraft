@@ -1,14 +1,16 @@
-from docker.types import containers
+"""
+Agents Command
+"""
 import typer
 from tabulate import tabulate
-from core import AgentManager
+from socialcraft import AgentManager
 
-app = typer.Typer()
+cli = typer.Typer()
 
 manager = AgentManager(docker_url="npipe:////./pipe/docker_engine")
 
 
-@app.command()
+@cli.command()
 def create(agent_name: str):
     """
     Create a new agent with agent_name
@@ -16,10 +18,10 @@ def create(agent_name: str):
     manager.create_agent(agent_name)
 
 
-@app.command()
-def list():
+@cli.command("list")
+def cli_list():
     """
-    List all the agents 
+    List all the agents
     """
     agents = manager.get_all_agents()
     table = [[agent.name, agent.status] for agent in agents]
@@ -28,7 +30,7 @@ def list():
         tabulate(table, headers=["Name", "Status"], tablefmt="fancy_grid"))
 
 
-@app.command()
+@cli.command()
 def deploy(agent_name: str):
     """
     Deploys the agent
@@ -36,7 +38,7 @@ def deploy(agent_name: str):
     manager.deploy_agent(agent_name)
 
 
-@app.command()
+@cli.command()
 def pause(agent_name: str):
     """
     Pauses the agent
@@ -44,7 +46,7 @@ def pause(agent_name: str):
     manager.pause_agent(agent_name)
 
 
-@app.command()
+@cli.command()
 def resume(agent_name: str):
     """
     Resumes the agent
@@ -52,7 +54,7 @@ def resume(agent_name: str):
     manager.resume_agent(agent_name)
 
 
-@app.command()
+@cli.command()
 def withdraw(agent_name: str):
     """
     Withdraw the agent
@@ -60,7 +62,7 @@ def withdraw(agent_name: str):
     manager.withdraw_agent(agent_name)
 
 
-@app.command()
+@cli.command()
 def kill(agent_name: str):
     """
     Kills the agent and all related data
@@ -69,4 +71,4 @@ def kill(agent_name: str):
 
 
 if __name__ == "__main__":
-    app()
+    cli()
