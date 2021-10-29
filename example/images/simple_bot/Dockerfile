@@ -1,4 +1,5 @@
-from node:17
+from node:17-alpine
+LABEL socialcraft_agent=''
 
 WORKDIR /agent
 COPY package.json main.js ./

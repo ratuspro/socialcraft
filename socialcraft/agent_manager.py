@@ -64,13 +64,10 @@ class AgentManager:
 
         path = pathlib.Path(pathlib.Path().resolve(),
                             "example/images/simple_bot/")
-        image = self.__get_docker_client().images.build(path=str(path))
+        image = self.__get_docker_client().images.build(path=str(path),
+                                                        rm=True)
         agent_container = self.__get_docker_client().containers.create(
-            image[0],
-            'sleep 300',
-            name=name,
-            labels=["socialcraft_agent"],
-            detach=True)
+            image[0], name=name, detach=True)
 
         agent = Agent(agent_container)
         self.__cache.add(agent)
