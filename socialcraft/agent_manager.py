@@ -13,12 +13,31 @@ class AgentManager:
     '''
     The AgentManager class supervises the deployment of agents
     '''
-    def __init__(self, docker_url=None):
+    def __init__(
+        self,
+        docker_url=None,
+        minecraft_host=None,
+        minecraft_username=None,
+        minecraft_password=None,
+        minecraft_port=None,
+        minecraft_version=None,
+        minecraft_auth=None,
+    ):
         self.__cache = AgentCache()
+
         if docker_url is not None:
             self.__docker_client = docker.DockerClient(base_url=docker_url)
         else:
             self.__docker_client = docker.from_env()
+
+        self.__minecraft_config = {
+            'host': minecraft_host or 'localhost',
+            'username': minecraft_username or 'email@example.com',
+            'password': minecraft_password or '123456789',
+            'port': minecraft_port or '25565',
+            'version': minecraft_version or 'false',
+            'auth': minecraft_auth or 'mojang',
+        }
 
     def __get_docker_client(self) -> Optional[DockerClient]:
         return self.__docker_client
@@ -42,7 +61,7 @@ class AgentManager:
             if self.__cache.has(agent_container.name):
                 agents.append(self.__cache.get(agent_container.name))
             else:
-                agent = Agent(agent_container)
+                agent = Agent(agent_container, self)
                 self.__cache.add(agent)
                 agents.append(agent)
 
@@ -66,10 +85,25 @@ class AgentManager:
                             "example/images/simple_bot/")
         image = self.__get_docker_client().images.build(path=str(path),
                                                         rm=True)
-        agent_container = self.__get_docker_client().containers.create(
-            image[0], name=name, detach=True)
 
-        agent = Agent(agent_container)
+        container_envs = []
+        container_envs.append(
+            f"MINECRAFT_HOST={self.__minecraft_config['host']}")
+        container_envs.append(
+            f"MINECRAFT_USERNAME={self.__minecraft_config['username']}")
+        container_envs.append(
+            f"MINECRAFT_PASSWORD={self.__minecraft_config['password']}")
+        container_envs.append(
+            f"MINECRAFT_PORT={self.__minecraft_config['port']}")
+        container_envs.append(
+            f"MINECRAFT_VERSION={self.__minecraft_config['version']}")
+        container_envs.append(
+            f"MINECRAFT_AUTH={self.__minecraft_config['auth']}")
+
+        agent_container = self.__get_docker_client().containers.create(
+            image[0], name=name, detach=True, environment=container_envs)
+
+        agent = Agent(agent_container, self)
         self.__cache.add(agent)
         return agent
 
@@ -108,7 +142,7 @@ class AgentManager:
         # UPDATE CACHE
         #   when container exists but cache has no entry for it, add it to cache
         if not self.__cache.has(name):
-            self.__cache.add(Agent(container))
+            self.__cache.add(Agent(container, self))
 
         container.start()
 
@@ -129,7 +163,7 @@ class AgentManager:
         # UPDATE CACHE
         #   when container exists but cache has no entry for it, add it to cache
         if not self.__cache.has(name):
-            self.__cache.add(Agent(container))
+            self.__cache.add(Agent(container, self))
 
         container.stop()
 
@@ -150,7 +184,7 @@ class AgentManager:
         # UPDATE CACHE
         #   when container exists but cache has no entry for it, add it to cache
         if not self.__cache.has(name):
-            self.__cache.add(Agent(container))
+            self.__cache.add(Agent(container, self))
 
         container.pause()
 
@@ -171,7 +205,7 @@ class AgentManager:
         # UPDATE CACHE
         #   when container exists but cache has no entry for it, add it to cache
         if not self.__cache.has(name):
-            self.__cache.add(Agent(container))
+            self.__cache.add(Agent(container, self))
 
         container.unpause()
 
@@ -189,7 +223,7 @@ class AgentManager:
             print(f"Agent with name '{name}' not found!")
             return None
 
-        agent = Agent(Container)
+        agent = Agent(container, self)
 
         # UPDATE CACHE
         #   when container exists but cache has no entry for it, add it to cache
