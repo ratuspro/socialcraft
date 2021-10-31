@@ -1,12 +1,12 @@
 const mineflayer = require('mineflayer')
 
 const bot = mineflayer.createBot({
-    host: process.env.SOCIALCRAFT_MINECRAFTSERVER_URL || 'localhost',
-    port: process.env.SOCIALCRAFT_MINECRAFTSERVER_PORT || 25565,
-    username: process.env.SOCIALCRAFT_MINECRAFTSERVER_USER || 'email@example.com',
-    password: process.env.SOCIALCRAFT_MINECRAFTSERVER_PASSWORD || '12345678',
-    version: process.env.SOCIALCRAFT_MINECRAFTSERVER_VERSION || false,
-    auth: process.env.SOCIALCRAFT_MINECRAFTSERVER_AUTH || 'mojang'
+    host: process.env.MINECRAFT_HOST ,
+    port: process.env.MINECRAFT_USERNAME ,
+    username: process.env.MINECRAFT_PASSWORD ,
+    password: process.env.MINECRAFT_PORT ,
+    version: process.env.MINECRAFT_VERSION ,
+    auth: process.env.MINECRAFT_AUTH
 })
 
 bot.on('chat', (username, message) => {

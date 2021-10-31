@@ -18,14 +18,15 @@ class Agent:
     '''
     The Agent class is a proxy to control the agent
     '''
-    def __init__(self, container: Container):
+    def __init__(self, container: Container, manager):
         self.__container = container
+        self.__manager = manager
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Container):
             return False
 
-        return self.id == other.id
+        return self.identifier == other.id
 
     @property
     def status(self):
@@ -50,8 +51,38 @@ class Agent:
         return self.__container.name
 
     @property
-    def id(self):
+    def identifier(self):
         '''
         The agent's identifier
         '''
         return self.__container.id
+
+    def pause(self):
+        """
+        Pauses this agent execution
+        """
+        self.__manager.pause_agent(self.name)
+
+    def resume(self):
+        """
+        Resumes this agent execution
+        """
+        self.__manager.resume_agent(self.name)
+
+    def deploy(self):
+        """
+        Deploys this agent to server
+        """
+        self.__manager.deploy_agent(self.name)
+
+    def withdraw(self):
+        """
+        Withdraws this agent from server
+        """
+        self.__manager.withdraw_agent(self.name)
+
+    def kill(self):
+        """
+        Kills this agent
+        """
+        self.__manager.kill_agent(self.name)
