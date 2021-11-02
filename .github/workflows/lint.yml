@@ -17,9 +17,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: flake8 Lint
-        uses: py-actions/flake8@v1
-        with:
-          path: "socialcraft"
-
+        run: pip install flake8
+      - name: Run Flake8 Lint
+        run: flake8 socialcraft/
