@@ -1,0 +1,19 @@
+name: Run unit tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Run Pytest
+        run: pytest tests
