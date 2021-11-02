@@ -1,4 +1,4 @@
-name: Run Linter on Pull Requests
+name: Run flake8 linter on Pull Requests
 
 on:
   pull_request:
