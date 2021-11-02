@@ -1,6 +1,6 @@
-'''
+"""
 This module defines the AgentManager class
-'''
+"""
 import pathlib
 from typing import Optional
 import docker
@@ -10,9 +10,9 @@ from .agent import Agent
 
 
 class AgentManager:
-    '''
+    """
     The AgentManager class supervises the deployment of agents
-    '''
+    """
     def __init__(
         self,
         docker_url=None,
@@ -31,12 +31,12 @@ class AgentManager:
             self.__docker_client = docker.from_env()
 
         self.__minecraft_config = {
-            'host': minecraft_host or 'localhost',
-            'username': minecraft_username or 'email@example.com',
-            'password': minecraft_password or '123456789',
-            'port': minecraft_port or '25565',
-            'version': minecraft_version or 'false',
-            'auth': minecraft_auth or 'mojang',
+            "host": minecraft_host or "localhost",
+            "username": minecraft_username or "email@example.com",
+            "password": minecraft_password or "123456789",
+            "port": minecraft_port or "25565",
+            "version": minecraft_version or "false",
+            "auth": minecraft_auth or "mojang",
         }
 
     def __get_docker_client(self) -> Optional[DockerClient]:
@@ -49,11 +49,11 @@ class AgentManager:
             return None
 
     def get_all_agents(self) -> list[Agent]:
-        '''
+        """
         List all the agents available
-        '''
+        """
         agent_containers = self.__get_docker_client().containers.list(
-            all=True, filters={'label': ["socialcraft_agent"]})
+            all=True, filters={"label": ["socialcraft_agent"]})
 
         agents = []
 
@@ -68,9 +68,9 @@ class AgentManager:
         return agents
 
     def create_agent(self, name: str) -> Optional[Agent]:
-        '''
+        """
         Creates a new agent based on a previously created prototype
-        '''
+        """
         container = self.__get_docker_container(name)
 
         if container is not None:
@@ -108,11 +108,13 @@ class AgentManager:
         return agent
 
     def kill_agent(self, name: str) -> None:
-        '''
+        """
         Permanentely kills an agent and destroys all associated data
-        '''
+        """
         # UPDATE CACHE
-        #   when agent should be killed and cache has an entry for it, clean cache
+        #   when agent should be killed and cache has an entry for it,
+        #   clean cache
+
         if self.__cache.has(name):
             self.__cache.erase(name)
 
@@ -125,99 +127,108 @@ class AgentManager:
         container.remove(force=True)
 
     def deploy_agent(self, name: str) -> None:
-        '''
+        """
         Deploys a previously created agent to the Minecraft Server
-        '''
+        """
 
         container = self.__get_docker_container(name)
 
         if container is None:
             # UPDATE CACHE
-            #   when container does not exist but cache has an entry for it, clean cache
+            #   when container does not exist but cache has an entry for it,
+            #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
             print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
-        #   when container exists but cache has no entry for it, add it to cache
+        #   when container exists but cache has no entry for it,
+        #   add it to cache
         if not self.__cache.has(name):
             self.__cache.add(Agent(container, self))
 
         container.start()
 
     def withdraw_agent(self, name: str) -> None:
-        '''
+        """
         Withdraws a previously deployed agent from the Minecraft Server
-        '''
+        """
         container = self.__get_docker_container(name)
 
         if container is None:
             # UPDATE CACHE
-            #   when container does not exist but cache has an entry for it, clean cache
+            #   when container does not exist but cache has an entry for it,
+            #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
             print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
-        #   when container exists but cache has no entry for it, add it to cache
+        #   when container exists but cache has no entry for it,
+        #   add it to cache
         if not self.__cache.has(name):
             self.__cache.add(Agent(container, self))
 
         container.stop()
 
     def pause_agent(self, name: str) -> None:
-        '''
+        """
         Pauses a previously deployed agent execution
-        '''
+        """
         container = self.__get_docker_container(name)
 
         if container is None:
             # UPDATE CACHE
-            #   when container does not exist but cache has an entry for it, clean cache
+            #   when container does not exist but cache has an entry for it,
+            #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
             print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
-        #   when container exists but cache has no entry for it, add it to cache
+        #   when container exists but cache has no entry for it,
+        #   add it to cache
         if not self.__cache.has(name):
             self.__cache.add(Agent(container, self))
 
         container.pause()
 
     def resume_agent(self, name: str) -> None:
-        '''
+        """
         Resumes a previously paused agent
-        '''
+        """
         container = self.__get_docker_container(name)
 
         if container is None:
             # UPDATE CACHE
-            #   when container does not exist but cache has an entry for it, clean cache
+            #   when container does not exist but cache has an entry for it,
+            #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
             print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
-        #   when container exists but cache has no entry for it, add it to cache
+        #   when container exists but cache has no entry for it,
+        #   add it to cache
         if not self.__cache.has(name):
             self.__cache.add(Agent(container, self))
 
         container.unpause()
 
     def get_agent(self, name: str) -> Optional[Agent]:
-        '''
+        """
         Retrieves the agent with 'name'
-        '''
+        """
         container = self.__get_docker_container(name)
 
         if container is None:
             # UPDATE CACHE
-            #   when container does not exist but cache has an entry for it, clean cache
+            #   when container does not exist but cache has an entry for it,
+            #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
             print(f"Agent with name '{name}' not found!")
@@ -226,7 +237,8 @@ class AgentManager:
         agent = Agent(container, self)
 
         # UPDATE CACHE
-        #   when container exists but cache has no entry for it, add it to cache
+        #   when container exists but cache has no entry for it,
+        #   add it to cache
         if not self.__cache.has(name):
             self.__cache.add(agent)
 
@@ -241,11 +253,11 @@ class AgentCache:
         self.__cache = {}
 
     def add(self, agent: Agent) -> str:
-        '''
+        """
         Add agent to the cache.
 
         returns the cache name Entry
-        '''
+        """
         if self.has(agent.name):
             return
         self.__cache[agent.name] = agent
@@ -253,23 +265,23 @@ class AgentCache:
         return agent.name
 
     def get(self, name: str) -> Optional[Agent]:
-        '''
+        """
         Retrieves the agent by name
-        '''
+        """
         if not self.has(name):
             return None
         return self.__cache[name]
 
     def has(self, name: str) -> bool:
-        '''
+        """
         Tests if the cache has agent with 'name'
-        '''
+        """
         return name in self.__cache
 
     def erase(self, name: str) -> None:
-        '''
+        """
         Remove entry with name
-        '''
+        """
         if not self.has(name):
             return
 

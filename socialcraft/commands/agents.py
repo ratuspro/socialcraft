@@ -27,7 +27,8 @@ def cli_list():
     table = [[agent.name, agent.status] for agent in agents]
 
     typer.echo(
-        tabulate(table, headers=["Name", "Status"], tablefmt="fancy_grid"))
+        tabulate(table, headers=["Name", "Status"], tablefmt="fancy_grid")
+    )
 
 
 @cli.command()
