@@ -1,23 +1,24 @@
-'''
+"""
 This module defines an Agent and the respective types (AgentStatus)
-'''
+"""
 from enum import Enum
 from docker.models.containers import Container
 
 
 class AgentStatus(Enum):
-    '''
+    """
     The status of an agent
-    '''
+    """
+
     OFFLINE = 1
     ONLINE = 2
     PAUSED = 3
 
 
 class Agent:
-    '''
+    """
     The Agent class is a proxy to control the agent
-    '''
+    """
     def __init__(self, container: Container, manager):
         self.__container = container
         self.__manager = manager
@@ -30,31 +31,35 @@ class Agent:
 
     @property
     def status(self):
-        '''
+        """
         The status of the agent
-        '''
-        if self.__container.status in ('created', 'restarting', 'removing',
-                                       'exited'):
+        """
+        if self.__container.status in (
+                "created",
+                "restarting",
+                "removing",
+                "exited",
+        ):
             return AgentStatus.OFFLINE
 
-        if self.__container.status == 'running':
+        if self.__container.status == "running":
             return AgentStatus.ONLINE
 
-        if self.__container.status == 'paused':
+        if self.__container.status == "paused":
             return AgentStatus.PAUSED
 
     @property
     def name(self):
-        '''
+        """
         The name of the agent
-        '''
+        """
         return self.__container.name
 
     @property
     def identifier(self):
-        '''
+        """
         The agent's identifier
-        '''
+        """
         return self.__container.id
 
     def pause(self):
