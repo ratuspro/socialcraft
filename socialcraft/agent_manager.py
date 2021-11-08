@@ -9,6 +9,12 @@ from docker.client import DockerClient
 from .agent import Agent
 
 
+def appendIf(entry: str, list: list, test: bool) -> list:
+    if test is not None:
+        list.append(entry)
+    return list
+
+
 class AgentManager:
     """
     The AgentManager class supervises the deployment of agents
@@ -32,11 +38,11 @@ class AgentManager:
 
         self.__minecraft_config = {
             "host": minecraft_host or "localhost",
-            "username": minecraft_username or "email@example.com",
-            "password": minecraft_password or "123456789",
             "port": minecraft_port or "25565",
-            "version": minecraft_version or "false",
-            "auth": minecraft_auth or "mojang",
+            "version": minecraft_version,
+            "auth": minecraft_auth,
+            "username": minecraft_username,
+            "password": minecraft_password,
         }
 
     def __get_docker_client(self) -> Optional[DockerClient]:
@@ -87,21 +93,39 @@ class AgentManager:
                                                         rm=True)
 
         container_envs = []
-        container_envs.append(
-            f"MINECRAFT_HOST={self.__minecraft_config['host']}")
-        container_envs.append(
-            f"MINECRAFT_USERNAME={self.__minecraft_config['username']}")
-        container_envs.append(
-            f"MINECRAFT_PASSWORD={self.__minecraft_config['password']}")
-        container_envs.append(
-            f"MINECRAFT_PORT={self.__minecraft_config['port']}")
-        container_envs.append(
-            f"MINECRAFT_VERSION={self.__minecraft_config['version']}")
-        container_envs.append(
-            f"MINECRAFT_AUTH={self.__minecraft_config['auth']}")
+
+        if (self.__minecraft_config['host'] is not None):
+            container_envs.append(
+                f"MINECRAFT_HOST={self.__minecraft_config['host']}")
+
+        if (self.__minecraft_config['username'] is not None):
+            container_envs.append(
+                f"MINECRAFT_USERNAME={self.__minecraft_config['username']}")
+
+        if (self.__minecraft_config['password'] is not None):
+            container_envs.append(
+                f"MINECRAFT_PASSWORD={self.__minecraft_config['password']}")
+
+        if (self.__minecraft_config['port'] is not None):
+            container_envs.append(
+                f"MINECRAFT_PORT={self.__minecraft_config['port']}")
+
+        if (self.__minecraft_config['version'] is not None):
+            container_envs.append(
+                f"MINECRAFT_VERSION={self.__minecraft_config['version']}")
+
+        if (self.__minecraft_config['auth'] is not None):
+            container_envs.append(
+                f"MINECRAFT_AUTH={self.__minecraft_config['auth']}")
+
+        container_envs.append(f"AGENT_NAME={name}")
 
         agent_container = self.__get_docker_client().containers.create(
-            image[0], name=name, detach=True, environment=container_envs)
+            image[0],
+            name=name,
+            detach=True,
+            environment=container_envs,
+            network="bridge")
 
         agent = Agent(agent_container, self)
         self.__cache.add(agent)
