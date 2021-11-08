@@ -1,13 +1,29 @@
 const mineflayer = require('mineflayer')
 
-const bot = mineflayer.createBot({
-    host: process.env.MINECRAFT_HOST ,
-    port: process.env.MINECRAFT_USERNAME ,
-    username: process.env.MINECRAFT_PASSWORD ,
-    password: process.env.MINECRAFT_PORT ,
-    version: process.env.MINECRAFT_VERSION ,
-    auth: process.env.MINECRAFT_AUTH
-})
+var botConfig = {
+    host: process.env.MINECRAFT_HOST,
+    port: process.env.MINECRAFT_PORT,
+}
+
+if (process.env.MINECRAFT_VERSION) {
+    botConfig['version'] = process.env.MINECRAFT_VERSION
+}
+
+if (process.env.MINECRAFT_USERNAME) {
+    botConfig['username'] = process.env.MINECRAFT_USERNAME
+}
+
+if (process.env.MINECRAFT_PASSWORD) {
+    botConfig['password'] = process.env.MINECRAFT_PASSWORD
+}
+
+if (process.env.MINECRAFT_VERSION) {
+    botConfig['version'] = process.env.MINECRAFT_VERSION
+}
+
+console.log(botConfig);
+
+const bot = mineflayer.createBot(botConfig)
 
 bot.on('chat', (username, message) => {
     if (username === bot.username) return
