@@ -11,6 +11,8 @@ if (process.env.MINECRAFT_VERSION) {
 
 if (process.env.MINECRAFT_USERNAME) {
     botConfig['username'] = process.env.MINECRAFT_USERNAME
+}else if (process.env.AGENT_NAME) {
+    botConfig['username'] = process.env.AGENT_NAME
 }
 
 if (process.env.MINECRAFT_PASSWORD) {

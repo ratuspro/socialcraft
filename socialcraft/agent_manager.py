@@ -118,6 +118,8 @@ class AgentManager:
             container_envs.append(
                 f"MINECRAFT_AUTH={self.__minecraft_config['auth']}")
 
+        container_envs.append(f"AGENT_NAME={name}")
+
         agent_container = self.__get_docker_client().containers.create(
             image[0],
             name=name,
