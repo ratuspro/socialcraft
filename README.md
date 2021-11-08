@@ -29,3 +29,11 @@ or
 ```
 agent_manager.deploy_agent(agent.name)
 ```
+
+## Deploy Minecraft Server
+
+### Using docker
+
+```
+docker run -d -p 25565:25565 -e EULA=TRUE -e ONLINE_MODE=FALSE -e MAX_PLAYERS=50 --name mc itzg/minecraft-server
+```
