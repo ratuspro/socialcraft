@@ -24,6 +24,7 @@ class AgentBlueprint:
     """
     def __init__(self, image: Image):
         self.__image = image
+        self.__envs = {}
 
     @property
     def image(self):
@@ -31,6 +32,19 @@ class AgentBlueprint:
         Retrieves the docker image associated with this blueprint
         """
         return self.__image
+
+    @property
+    def environment_variables(self):
+        """
+        Retrieves the blueprint environment variables
+        """
+        return self.__envs
+
+    def add_environment_variable(self, name: str, value: str):
+        """
+        Add environment variable to the blueprint
+        """
+        self.__envs[name] = value
 
 
 class AgentCache:

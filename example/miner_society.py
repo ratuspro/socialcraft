@@ -1,8 +1,9 @@
-from os import name
-import pathlib
-from socialcraft import AgentManager, AgentBlueprint
-
+"""
+Simple miner society
+"""
 import time
+import pathlib
+from socialcraft import AgentManager
 
 if __name__ == "__main__":
 
