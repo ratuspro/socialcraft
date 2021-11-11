@@ -3,7 +3,9 @@ Simple miner society
 """
 import time
 import pathlib
-from socialcraft import AgentManager
+import random
+from socialcraft import AgentManager, agent_manager
+from socialcraft.agent import Agent, AgentStatus
 
 if __name__ == "__main__":
 
@@ -14,24 +16,30 @@ if __name__ == "__main__":
     # Create Agent Blueprint
     path = pathlib.Path(pathlib.Path().resolve(), "example/images/simple_bot/")
     basic_miner = manager.create_blueprint(str(path))
+    basic_miner.add_environment_variable("MINER_JUMPING_TIME", "2")
 
     # Create multiple agents with different settings
     agents = []
-    for i in range(0, 10):
-        agent = manager.create_agent(name="Agent" + str(i), blueprint)
 
-    agents.append(manager.create_agent)
+    for i in range(0, 10):
+        agent = manager.create_agent(name="Agent" + str(i),
+                                     blueprint=basic_miner)
+        agents.append(agent)
 
     # Randomly deploy and withdraw agents every minute
 
-    while True:
-        agent = manager.create_agent(name="MaAgent", blueprint=basic_miner)
-        time.sleep(10)
-        agent.deploy()
-        time.sleep(10)
-        agent.pause()
-        time.sleep(10)
-        agent.withdraw()
-        time.sleep(10)
-        agent.kill()
-        time.sleep(10)
+    for _ in range(0, 50):
+        agent: Agent = agents[random.randrange(0, 10)]
+
+        if agent.status == AgentStatus.ONLINE:
+            agent.withdraw()
+        elif agent.status == AgentStatus.OFFLINE:
+            agent.deploy()
+
+        time.sleep(20)
+
+    for i in range(0, 10):
+        if agents[i].status == AgentStatus.PAUSED or agents[
+                i].status == AgentStatus.ONLINE:
+            agents[i].withdraw()
+        agents[i].kill()
