@@ -1,34 +1,107 @@
 """
 This module defines the AgentManager class
 """
-import pathlib
 from typing import Optional
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
+from docker.models.images import Image
 from .agent import Agent
 
 
-def appendIf(entry: str, list: list, test: bool) -> list:
+def append_if(entry: str, original: list, test: bool) -> list:
+    """
+    Appends to original a new element entry, if test is True
+    """
     if test is not None:
-        list.append(entry)
-    return list
+        original.append(entry)
+    return original
+
+
+class AgentBlueprint:
+    """
+    Agent Blueprint is used to generate new Agents
+    """
+    def __init__(self, image: Image):
+        self.__image = image
+        self.__envs = {}
+
+    @property
+    def image(self):
+        """
+        Retrieves the docker image associated with this blueprint
+        """
+        return self.__image
+
+    @property
+    def environment_variables(self):
+        """
+        Retrieves the blueprint environment variables
+        """
+        return self.__envs
+
+    def add_environment_variable(self, name: str, value: str):
+        """
+        Add environment variable to the blueprint
+        """
+        self.__envs[name] = value
+
+
+class AgentCache:
+    """
+    Agent Cache Management
+    """
+    def __init__(self):
+        self.__cache = {}
+
+    def add(self, agent: Agent) -> str:
+        """
+        Add agent to the cache.
+
+        returns the cache name Entry
+        """
+        if self.has(agent.name):
+            return
+        self.__cache[agent.name] = agent
+
+        return agent.name
+
+    def get(self, name: str) -> Optional[Agent]:
+        """
+        Retrieves the agent by name
+        """
+        if not self.has(name):
+            return None
+        return self.__cache[name]
+
+    def has(self, name: str) -> bool:
+        """
+        Tests if the cache has agent with 'name'
+        """
+        return name in self.__cache
+
+    def erase(self, name: str) -> None:
+        """
+        Remove entry with name
+        """
+        if not self.has(name):
+            return
+
+        self.__cache.pop(name)
 
 
 class AgentManager:
     """
     The AgentManager class supervises the deployment of agents
     """
-    def __init__(
-        self,
-        docker_url=None,
-        minecraft_host=None,
-        minecraft_username=None,
-        minecraft_password=None,
-        minecraft_port=None,
-        minecraft_version=None,
-        minecraft_auth=None,
-    ):
+    def __init__(self,
+                 docker_url=None,
+                 minecraft_host=None,
+                 minecraft_username=None,
+                 minecraft_password=None,
+                 minecraft_port=None,
+                 minecraft_version=None,
+                 minecraft_auth=None):
         self.__cache = AgentCache()
 
         if docker_url is not None:
@@ -73,7 +146,8 @@ class AgentManager:
 
         return agents
 
-    def create_agent(self, name: str) -> Optional[Agent]:
+    def create_agent(self, name: str,
+                     blueprint: AgentBlueprint) -> Optional[Agent]:
         """
         Creates a new agent based on a previously created prototype
         """
@@ -87,41 +161,39 @@ class AgentManager:
         if self.__cache.has(name):
             self.__cache.erase(name)
 
-        path = pathlib.Path(pathlib.Path().resolve(),
-                            "example/images/simple_bot/")
-        image = self.__get_docker_client().images.build(path=str(path),
-                                                        rm=True)
+        container_envs = {}
 
-        container_envs = []
+        if self.__minecraft_config['host'] is not None:
+            container_envs["MINECRAFT_HOST"] = self.__minecraft_config['host']
 
-        if (self.__minecraft_config['host'] is not None):
-            container_envs.append(
-                f"MINECRAFT_HOST={self.__minecraft_config['host']}")
+        if self.__minecraft_config['username'] is not None:
+            container_envs["MINECRAFT_USERNAME"] = self.__minecraft_config[
+                'username']
 
-        if (self.__minecraft_config['username'] is not None):
-            container_envs.append(
-                f"MINECRAFT_USERNAME={self.__minecraft_config['username']}")
+        if self.__minecraft_config['password'] is not None:
+            container_envs["MINECRAFT_PASSWORD"] = self.__minecraft_config[
+                'password']
 
-        if (self.__minecraft_config['password'] is not None):
-            container_envs.append(
-                f"MINECRAFT_PASSWORD={self.__minecraft_config['password']}")
+        if self.__minecraft_config['port'] is not None:
+            container_envs["MINECRAFT_PORT"] = self.__minecraft_config['port']
 
-        if (self.__minecraft_config['port'] is not None):
-            container_envs.append(
-                f"MINECRAFT_PORT={self.__minecraft_config['port']}")
+        if self.__minecraft_config['version'] is not None:
+            container_envs["MINECRAFT_VERSION"] = self.__minecraft_config[
+                'version']
 
-        if (self.__minecraft_config['version'] is not None):
-            container_envs.append(
-                f"MINECRAFT_VERSION={self.__minecraft_config['version']}")
+        if self.__minecraft_config['auth'] is not None:
+            container_envs["MINECRAFT_AUTH"] = self.__minecraft_config['auth']
 
-        if (self.__minecraft_config['auth'] is not None):
-            container_envs.append(
-                f"MINECRAFT_AUTH={self.__minecraft_config['auth']}")
+        container_envs["AGENT_NAME"] = name
 
-        container_envs.append(f"AGENT_NAME={name}")
+        for blueprint_env in blueprint.environment_variables:
+            if blueprint_env not in container_envs:
+                container_envs[
+                    blueprint_env] = blueprint.environment_variables[
+                        blueprint_env]
 
         agent_container = self.__get_docker_client().containers.create(
-            image[0],
+            blueprint.image,
             name=name,
             detach=True,
             environment=container_envs,
@@ -268,45 +340,12 @@ class AgentManager:
 
         return agent
 
-
-class AgentCache:
-    """
-    Agent Cache Management
-    """
-    def __init__(self):
-        self.__cache = {}
-
-    def add(self, agent: Agent) -> str:
+    def create_blueprint(self, agent_source_path: str) -> AgentBlueprint:
         """
-        Add agent to the cache.
+        Create a new blueprint for agents based on agent_source_path
+        """
+        image = self.__get_docker_client().images.build(path=agent_source_path,
+                                                        rm=True)
+        blueprint = AgentBlueprint(image[0])
 
-        returns the cache name Entry
-        """
-        if self.has(agent.name):
-            return
-        self.__cache[agent.name] = agent
-
-        return agent.name
-
-    def get(self, name: str) -> Optional[Agent]:
-        """
-        Retrieves the agent by name
-        """
-        if not self.has(name):
-            return None
-        return self.__cache[name]
-
-    def has(self, name: str) -> bool:
-        """
-        Tests if the cache has agent with 'name'
-        """
-        return name in self.__cache
-
-    def erase(self, name: str) -> None:
-        """
-        Remove entry with name
-        """
-        if not self.has(name):
-            return
-
-        self.__cache.pop(name)
+        return blueprint
