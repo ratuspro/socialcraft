@@ -16,6 +16,11 @@ if __name__ == "__main__":
     basic_miner = manager.create_blueprint(str(path))
 
     # Create multiple agents with different settings
+    agents = []
+    for i in range(0, 10):
+        agent = manager.create_agent(name="Agent" + str(i), blueprint)
+
+    agents.append(manager.create_agent)
 
     # Randomly deploy and withdraw agents every minute
 
