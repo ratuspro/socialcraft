@@ -340,7 +340,7 @@ class AgentManager:
 
         return agent
 
-    def create_blueprint(self, agent_source_path: str) -> AgentBlueprint:
+    def generate_blueprint(self, agent_source_path: str) -> AgentBlueprint:
         """
         Create a new blueprint for agents based on agent_source_path
         """

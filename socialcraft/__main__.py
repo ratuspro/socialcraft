@@ -1,6 +1,9 @@
 """
 Entrypoint for SocialCraft
 """
-from socialcraft.cli import app
+from socialcraft.cli.main import SocialCraftCli
 
-app()
+import sys
+
+cli = SocialCraftCli()
+sys.exit(cli.cmdloop())

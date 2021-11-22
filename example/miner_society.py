@@ -4,7 +4,7 @@ Simple miner society
 import time
 import pathlib
 import random
-from socialcraft import AgentManager, agent_manager
+from socialcraft import AgentManager
 from socialcraft.agent import Agent, AgentStatus
 
 if __name__ == "__main__":
