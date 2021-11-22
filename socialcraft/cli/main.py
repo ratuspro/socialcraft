@@ -1,14 +1,16 @@
 """
 CLI to interact with Socialcraft
 """
-from random import randint
 import string
 import cmd2
+import toml
 from socialcraft.agent_manager import AgentManager
 
 
 class SocialCraftCli(cmd2.Cmd):
-
+    """
+    Socialcraft Cli
+    """
     CMD_CATEGORY_AGENT_MANAGEMENT = "Agent Management"
     CMD_CATEGORY_BLUEPRINT_MANAGEMENT = "Blueprint Management"
     CMD_CATEGORY_UTILS = "Utility"
@@ -58,7 +60,7 @@ class SocialCraftCli(cmd2.Cmd):
                                     minecraft_port=self.minecraft_port)
 
     @cmd2.with_category(CMD_CATEGORY_AGENT_MANAGEMENT)
-    def do_create(self, name: str):
+    def do_create(self):
         """
         Creates a new agent
         """
@@ -72,8 +74,17 @@ class SocialCraftCli(cmd2.Cmd):
         self.poutput("Creating Blueprint")
 
     @cmd2.with_category(CMD_CATEGORY_UTILS)
-    def do_load(self, _):
+    def do_load(self, file_path: str):
         """
         Loads a group of agents from a file specification
         """
         self.poutput("Loading file")
+        parse_file(file_path)
+
+
+def parse_file(file_path: str):
+    """
+    Parse File with agent specification
+    """
+    toml_content = toml.load(file_path)
+    print(toml_content)
