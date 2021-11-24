@@ -1,0 +1,11 @@
+[blueprints.lumberjack]
+directory="./images/simple_bot/"
+
+[blueprints.farmer]
+directory="./images/simple_bot/"
+
+[agents.JohnDoe]
+blueprint="farmer"
+
+[agents.JaneDoe]
+blueprint="lumberjack"
