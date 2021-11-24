@@ -2,8 +2,10 @@
 CLI to interact with Socialcraft
 """
 import string
+from sys import path
 import cmd2
 import toml
+import pathlib
 from socialcraft.agent_manager import AgentManager
 
 
@@ -78,13 +80,49 @@ class SocialCraftCli(cmd2.Cmd):
         """
         Loads a group of agents from a file specification
         """
-        self.poutput("Loading file")
-        parse_file(file_path)
+        self.poutput(f"Processing file {file_path}...")
+        toml_specification = toml.load(file_path)
+
+        self.poutput("Loading blueprints...")
+
+        toml_directory = pathlib.Path(pathlib.Path().resolve(),
+                                      file_path).parents[0]
+
+        blueprints_cache = {}
+        blueprints = toml_specification['blueprints']
+
+        self.poutput(f"{len(blueprints)} blueprints to generate...")
+        for blueprint_key in blueprints:
+            blueprint = blueprints[blueprint_key]
+            directory_path = pathlib.Path(toml_directory,
+                                          blueprint['directory'])
+            self.poutput(
+                f"Generating blueprint with name '{blueprint_key}' from {directory_path}..."
+            )
+            blueprints_cache[blueprint_key] = self.manager.generate_blueprint(
+                blueprint_key, str(directory_path))
+            self.poutput(f"Generated blueprint '{blueprint_key}'")
+
+        agents = toml_specification['agents']
+
+        self.poutput(f"{len(agents)} agents to generate...")
+        for agent_key in agents:
+            agent = agents[agent_key]
+
+            self.poutput(
+                f"Generating agent with name '{agent_key}' from blueprint {agent['blueprint']}..."
+            )
+
+            if agent['blueprint'] not in blueprints_cache:
+                pass  # DO SOME ERROR HERE
+
+            self.manager.create_agent(agent_key,
+                                      blueprints_cache[agent['blueprint']])
 
 
 def parse_file(file_path: str):
     """
     Parse File with agent specification
     """
-    toml_content = toml.load(file_path)
-    print(toml_content)
+    for agent in toml_content['agents']:
+        print(toml_content['agents'][agent])
