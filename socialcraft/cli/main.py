@@ -2,10 +2,9 @@
 CLI to interact with Socialcraft
 """
 import string
-from sys import path
+import pathlib
 import cmd2
 import toml
-import pathlib
 from socialcraft.agent_manager import AgentManager
 
 
@@ -138,11 +137,3 @@ class SocialCraftCli(cmd2.Cmd):
 
             self.manager.create_agent(agent_key,
                                       blueprints_cache[agent['blueprint']])
-
-
-def parse_file(file_path: str):
-    """
-    Parse File with agent specification
-    """
-    for agent in toml_content['agents']:
-        print(toml_content['agents'][agent])
