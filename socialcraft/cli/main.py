@@ -115,9 +115,8 @@ class SocialCraftCli(cmd2.Cmd):
             blueprint = blueprints[blueprint_key]
             directory_path = pathlib.Path(toml_directory,
                                           blueprint['directory'])
-            self.poutput(
-                f"Generating blueprint with name '{blueprint_key}' from {directory_path}..."
-            )
+            self.poutput((f"Generating blueprint '{blueprint_key}'",
+                          f"from {directory_path} ..."))
             blueprints_cache[blueprint_key] = self.manager.generate_blueprint(
                 blueprint_key, str(directory_path))
             self.poutput(f"Generated blueprint '{blueprint_key}'")
@@ -128,9 +127,8 @@ class SocialCraftCli(cmd2.Cmd):
         for agent_key in agents:
             agent = agents[agent_key]
 
-            self.poutput(
-                f"Generating agent with name '{agent_key}' from blueprint {agent['blueprint']}..."
-            )
+            self.poutput((f"Generating agent '{agent_key}' ",
+                          f"from blueprint {agent['blueprint']} ..."))
 
             if agent['blueprint'] not in blueprints_cache:
                 pass  # DO SOME ERROR HERE
