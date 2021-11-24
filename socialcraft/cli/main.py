@@ -66,7 +66,21 @@ class SocialCraftCli(cmd2.Cmd):
         """
         Creates a new agent
         """
-        self.poutput("Deploying Agent")
+        self.poutput("Creating Agent")
+
+    deploy_agent_argparser = cmd2.Cmd2ArgumentParser()
+    deploy_agent_argparser.add_argument('name', type=str)
+
+    @cmd2.with_argparser(deploy_agent_argparser)
+    @cmd2.with_category(CMD_CATEGORY_AGENT_MANAGEMENT)
+    def do_deploy(self, opts):
+        """
+        Deploys an agent
+        """
+        agent_name = opts.name
+        self.poutput(f"Deploying Agent {agent_name}...")
+        self.manager.deploy_agent(agent_name)
+        self.poutput(f"Deployed agent {agent_name}!")
 
     @cmd2.with_category(CMD_CATEGORY_BLUEPRINT_MANAGEMENT)
     def do_generate(self, _):
