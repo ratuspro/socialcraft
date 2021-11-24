@@ -83,17 +83,23 @@ class SocialCraftCli(cmd2.Cmd):
         self.poutput(f"Deployed agent {agent_name}!")
 
     @cmd2.with_category(CMD_CATEGORY_BLUEPRINT_MANAGEMENT)
-    def do_generate(self, _):
+    def do_generate(self):
         """
         Generates a new agent blueprint
         """
         self.poutput("Creating Blueprint")
 
+    load_specification_argparser = cmd2.Cmd2ArgumentParser()
+    load_specification_argparser.add_argument('file_path', type=str)
+
+    @cmd2.with_argparser(load_specification_argparser)
     @cmd2.with_category(CMD_CATEGORY_UTILS)
-    def do_load(self, file_path: str):
+    def do_load(self, opts):
         """
         Loads a group of agents from a file specification
         """
+        file_path = str(opts.file_path)
+
         self.poutput(f"Processing file {file_path}...")
         toml_specification = toml.load(file_path)
 
