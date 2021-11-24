@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # Create Agent Blueprint
     path = pathlib.Path(pathlib.Path().resolve(), "example/images/simple_bot/")
-    basic_miner = manager.create_blueprint(str(path))
+    basic_miner = manager.generate_blueprint(str(path))
     basic_miner.add_environment_variable("MINER_JUMPING_TIME", "2")
 
     # Create multiple agents with different settings
