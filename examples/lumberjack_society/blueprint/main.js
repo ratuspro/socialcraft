@@ -1,4 +1,7 @@
 const mineflayer = require('mineflayer')
+const socialcraft = require('./socialcraft.js')
+
+socialcraft.todo()
 
 var botConfig = {
     host: process.env.MINECRAFT_HOST,
@@ -23,7 +26,6 @@ if (process.env.MINECRAFT_VERSION) {
     botConfig['version'] = process.env.MINECRAFT_VERSION
 }
 
-console.log(botConfig);
 
 const bot = mineflayer.createBot(botConfig)
 
@@ -33,7 +35,6 @@ bot.on('chat', (username, message) => {
 })
 
 bot.once('spawn', () => {
-    console.log(bot)
     bot.setControlState('jump', true)
 })
 
