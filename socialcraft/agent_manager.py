@@ -22,9 +22,17 @@ class AgentBlueprint:
     """
     Agent Blueprint is used to generate new Agents
     """
-    def __init__(self, image: Image):
+    def __init__(self, image: Image, name: str):
+        self.__name = name
         self.__image = image
         self.__envs = {}
+
+    @property
+    def name(self):
+        """
+        Retrieves the name of the blueprint
+        """
+        return self.__name
 
     @property
     def image(self):
@@ -340,12 +348,14 @@ class AgentManager:
 
         return agent
 
-    def generate_blueprint(self, agent_source_path: str) -> AgentBlueprint:
+    def generate_blueprint(self, name: str,
+                           agent_source_path: str) -> AgentBlueprint:
         """
         Create a new blueprint for agents based on agent_source_path
         """
-        image = self.__get_docker_client().images.build(path=agent_source_path,
+        image = self.__get_docker_client().images.build(tag=name,
+                                                        path=agent_source_path,
                                                         rm=True)
-        blueprint = AgentBlueprint(image[0])
+        blueprint = AgentBlueprint(image[0], name)
 
         return blueprint
