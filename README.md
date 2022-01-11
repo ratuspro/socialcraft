@@ -33,5 +33,5 @@ agent_manager.deploy_agent(agent.name)
 ### Using docker
 
 ```
-docker run -d -p 25565:25565 -e EULA=TRUE -e ONLINE_MODE=FALSE -e MAX_PLAYERS=50 --name mc itzg/minecraft-server
+docker run -d -p 25565:25565 -e EULA=TRUE -e ONLINE_MODE=FALSE -e MAX_PLAYERS=50 -e VERSION=1.17 -name mc itzg/minecraft-server
 ```
