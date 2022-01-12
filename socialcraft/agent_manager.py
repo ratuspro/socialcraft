@@ -162,7 +162,6 @@ class AgentManager:
         container = self.__get_docker_container(name)
 
         if container is not None:
-            print(f"Agent with name '{name}' already exists.")
             return None
 
         # when agent does not exist and cache has an entry for it, clean cache
@@ -225,7 +224,6 @@ class AgentManager:
         container = self.__get_docker_container(name)
 
         if container is None:
-            print(f"Agent with name '{name}' not found!")
             return
 
         container.remove(force=True)
@@ -243,7 +241,6 @@ class AgentManager:
             #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
-            print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
@@ -266,7 +263,6 @@ class AgentManager:
             #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
-            print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
@@ -289,7 +285,6 @@ class AgentManager:
             #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
-            print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
@@ -312,7 +307,6 @@ class AgentManager:
             #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
-            print(f"Agent with name '{name}' not found!")
             return
 
         # UPDATE CACHE
@@ -335,7 +329,6 @@ class AgentManager:
             #   clean cache
             if self.__cache.has(name):
                 self.__cache.erase(name)
-            print(f"Agent with name '{name}' not found!")
             return None
 
         agent = Agent(container, self)
