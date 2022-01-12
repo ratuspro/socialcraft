@@ -15,8 +15,12 @@ if __name__ == "__main__":
     agent_blueprint = manager.generate_blueprint(name="friendly", agent_source_path=str(path))
 
     # Create Agent
-    joe = manager.create_agent(name="friendly_joe", blueprint = agent_blueprint)
+    for i in range(0,10):
+        name = f"friendly_joe_{str(i)}"
+        old_agent = manager.get_agent(name)
+ 
+        if old_agent is not None:
+            old_agent.kill()
 
-    joe.deploy()
-
-
+        new_joe = manager.create_agent(name=name, blueprint = agent_blueprint)
+        new_joe.deploy()
