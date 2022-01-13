@@ -26,6 +26,13 @@ if (process.env.MINECRAFT_VERSION) {
     botConfig['version'] = process.env.MINECRAFT_VERSION
 }
 
+social_group = 0
+
+if (process.env.SOCIAL_GROUP) {
+    social_group = process.env.SOCIAL_GROUP
+}
+
+
 
 const bot = mineflayer.createBot(botConfig)
 
@@ -57,7 +64,7 @@ bot.once('spawn', () => {
     // Create our states
     const getClosestPlayer = new BehaviorGetClosestEntity(bot, targets, EntityFilters().PlayersOnly);
     const lookAtPlayer = new BehaviorLookAtEntity(bot, targets);
-    const greetPlayer = Math.random() > 0.5 ? new BehaviourJumpingGreetPlayer(bot, targets) : new BehaviourCrounchGreetPlayer(bot, targets);
+    const greetPlayer = social_group==0 ?  new BehaviourJumpingGreetPlayer(bot, targets) : new BehaviourCrounchGreetPlayer(bot, targets);
 
 
     // Create our transitions
@@ -72,7 +79,7 @@ bot.once('spawn', () => {
         new StateTransition({
             parent: lookAtPlayer,
             child: greetPlayer,
-            shouldTransition: () => lookAtPlayer.distanceToTarget() <= 5,
+            shouldTransition: () => lookAtPlayer.distanceToTarget() <= 10,
         }),
 
         new StateTransition({
@@ -94,66 +101,6 @@ bot.once('spawn', () => {
 
 bot.on('kicked', console.log)
 bot.on('error', console.log)
-
-
-
-//Implement this
-const BehaviourWaitForNearbyEntity = (function(){
-
-    const maxJumps = 2;
-    function BehaviourJumpingGreetPlayer(bot, targets)
-    {
-        this.bot = bot;
-        this.active = false;
-        this.stateName = 'GreetOther';
-        this.targets = targets;
-        this.counter = 0;
-        this.alreadyGreeted = false;
-    }
-
-    BehaviourJumpingGreetPlayer.prototype.reset = function () {
-        this.counter = 0;
-    };
-
-    BehaviourJumpingGreetPlayer.prototype.onStateEntered = function () {
-        if(this.alreadyGreeted){
-            return;
-        }
-        this.reset();
-        this.bot.setControlState("jump", true);
-        
-    };
-    BehaviourJumpingGreetPlayer.prototype.onStateExited = function () {
-        console.log(`${bot.username} has left the ${this.myStateName} state.`);
-        this.bot.setControlState("jump", false);
-    };
-
-    BehaviourJumpingGreetPlayer.prototype.update = function () {
-        if(!this.bot.entity.onGround){
-            this.bot.setControlState("jump", false);
-        }else{
-            this.counter +=1;
-            if(this.counter <= maxJumps){
-                this.bot.setControlState("jump", true);
-            }
-        }
-    };
-
-    BehaviourJumpingGreetPlayer.prototype.isGreetingCompleted = function(){
-        const entity = this.targets.entity;
-
-        if(this.alreadyGreeted || this.counter >= maxJumps && this.bot.entity.onGround){
-            this.alreadyGreeted = true;
-            return true;
-        }
-
-        return false;
-    }
-
-    return BehaviourJumpingGreetPlayer;
-}());
-
-
 
 const BehaviourJumpingGreetPlayer = (function(){
 
@@ -276,6 +223,77 @@ const BehaviourCrounchGreetPlayer = (function(){
 
         return false;
     }
+
+    return BehaviourCrounchGreetPlayer;
+}());
+
+
+
+const BehaviourWaitOrNearby = (function(){
+
+
+    function BehaviourCrounchGreetPlayer(bot, targets, maxWaitingTicks)
+    {
+        this.bot = bot;
+        this.active = false;
+        this.stateName = 'GreetOther';
+        this.targets = targets;
+        this.maxWaitingTicks = maxWaitingTicks;
+    }
+
+    BehaviourCrounchGreetPlayer.prototype.reset = function () {
+        this.waitingTimer = 0;
+        this.closestEntity = null;
+    };
+
+    BehaviourCrounchGreetPlayer.prototype.onStateEntered = function () {
+        this.reset();
+    };
+
+    BehaviourCrounchGreetPlayer.prototype.onStateExited = function () {
+        
+    };
+
+    BehaviourCrounchGreetPlayer.prototype.update = function () {
+        this.waitingTimer += 1;
+        this.closestEntity = getClosestEntity();
+        this.bot.lookAt(entity.position.offset(0, entity.height, 0));
+    };
+
+    BehaviourCrounchGreetPlayer.prototype.isSomeoneNearby = function(){
+        if(this.bot.position.distanceTo(this.closestEntity.entity.position) < 10)
+            return true;
+
+        
+    }
+
+    BehaviourCrounchGreetPlayer.prototype.timeExpired = function(){
+        if(this.waitingTimer >= this.maxWaitingTicks)
+            return true;
+        return false;
+    }
+
+    function getClosestEntity(){
+        closest = null
+        distance = 0
+    
+        for (const entityName of Object.keys(this.bot.entities)) {
+          const entity = this.bot.entities[entityName]
+    
+          if (entity === this.bot.entity) { continue }
+    
+          if (!this.filter(entity)) { continue }
+    
+          const dist = entity.position.distanceTo(this.bot.entity.position)
+    
+          if (closest === null || dist < distance) {
+            closest = entity
+            distance = dist
+          }
+        }
+    
+        return closest
+      }
 
     return BehaviourCrounchGreetPlayer;
 }());
