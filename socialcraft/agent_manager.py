@@ -1,7 +1,7 @@
 """
 This module defines the AgentManager class
 """
-from typing import Optional
+from typing import Dict, Optional
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
@@ -155,7 +155,7 @@ class AgentManager:
         return agents
 
     def create_agent(self, name: str,
-                     blueprint: AgentBlueprint) -> Optional[Agent]:
+                     blueprint: AgentBlueprint, custom_envs: Dict = {}) -> Optional[Agent]:
         """
         Creates a new agent based on a previously created prototype
         """
@@ -192,6 +192,8 @@ class AgentManager:
             container_envs["MINECRAFT_AUTH"] = self.__minecraft_config['auth']
 
         container_envs["AGENT_NAME"] = name
+
+        container_envs.update(custom_envs)
 
         for blueprint_env in blueprint.environment_variables:
             if blueprint_env not in container_envs:
