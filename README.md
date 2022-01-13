@@ -33,5 +33,5 @@ agent_manager.deploy_agent(agent.name)
 ### Using docker
 
 ```
-docker run -d -p 25565:25565 -e 'GENERATOR_SETTINGS=minecraft:bedrock,3*minecraft:stone,52*minecraft:sandstone;minecraft:desert;' -e SPAWN_ANIMALS=false -e SPAWN_MONSTERS=false -e SPAWN_NPCS=false -e LEVEL_TYPE=flat -e EULA=TRUE -e ONLINE_MODE=FALSE -e MAX_PLAYERS=50 -e VERSION=1.17 --name mc itzg/minecraft-server
+docker run -d -p 25565:25565 -e SPAWN_ANIMALS=false -e SPAWN_MONSTERS=false -e SPAWN_NPCS=false -e LEVEL_TYPE=flat -e EULA=TRUE -e ONLINE_MODE=FALSE -e MAX_PLAYERS=50 -e VERSION=1.17 --name mc itzg/minecraft-server
 ```
