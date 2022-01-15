@@ -15,5 +15,5 @@ jobs:
           python-version: 3.9
       - name: Install Dependencies
         run: pip install black
-      - name: Run Flake8 Lint
+      - name: Run Black Lint
         run: black socialcraft/
