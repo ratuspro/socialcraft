@@ -19,6 +19,7 @@ class Agent:
     """
     The Agent class is a proxy to control the agent
     """
+
     def __init__(self, container: Container, manager):
         self.__container = container
         self.__manager = manager
@@ -35,10 +36,10 @@ class Agent:
         The status of the agent
         """
         if self.__container.status in (
-                "created",
-                "restarting",
-                "removing",
-                "exited",
+            "created",
+            "restarting",
+            "removing",
+            "exited",
         ):
             return AgentStatus.OFFLINE
 

@@ -11,6 +11,7 @@ class SocialCraftCli(cmd2.Cmd):
     """
     Socialcraft Cli
     """
+
     CMD_CATEGORY_AGENT_MANAGEMENT = "Agent Management"
     CMD_CATEGORY_BLUEPRINT_MANAGEMENT = "Blueprint Management"
     CMD_CATEGORY_UTILS = "Utility"
@@ -19,15 +20,15 @@ class SocialCraftCli(cmd2.Cmd):
         super().__init__()
 
         # CLEAN UP CLI
-        self.remove_settable('debug')
-        self.remove_settable('feedback_to_output')
-        self.remove_settable('max_completion_items')
-        self.remove_settable('quiet')
-        self.remove_settable('timing')
-        self.remove_settable('always_show_hint')
-        self.remove_settable('echo')
-        self.remove_settable('editor')
-        self.remove_settable('allow_style')
+        self.remove_settable("debug")
+        self.remove_settable("feedback_to_output")
+        self.remove_settable("max_completion_items")
+        self.remove_settable("quiet")
+        self.remove_settable("timing")
+        self.remove_settable("always_show_hint")
+        self.remove_settable("echo")
+        self.remove_settable("editor")
+        self.remove_settable("allow_style")
 
         # HIDE DEFAULT COMMANDS
         del cmd2.Cmd.do_alias
@@ -41,23 +42,26 @@ class SocialCraftCli(cmd2.Cmd):
         del cmd2.Cmd.do_run_script
         del cmd2.Cmd.do_shell
 
-        self.prompt = '(SocialCraft) '
+        self.prompt = "(SocialCraft) "
 
         # DEFINE SETTINGS
         self.minecraft_host = "host.docker.internal"
         self.minecraft_port = "25565"
 
         self.add_settable(
-            cmd2.Settable('minecraft_host', string,
-                          'host for the minecraft server', self))
+            cmd2.Settable(
+                "minecraft_host", string, "host for the minecraft server", self
+            )
+        )
 
         self.add_settable(
-            cmd2.Settable('minecraft_port', int,
-                          'port of the minecraft server', self))
+            cmd2.Settable("minecraft_port", int, "port of the minecraft server", self)
+        )
 
         # STARTUP SOCIALCRAFT MANAGER
-        self.manager = AgentManager(minecraft_host=self.minecraft_host,
-                                    minecraft_port=self.minecraft_port)
+        self.manager = AgentManager(
+            minecraft_host=self.minecraft_host, minecraft_port=self.minecraft_port
+        )
 
     @cmd2.with_category(CMD_CATEGORY_AGENT_MANAGEMENT)
     def do_create(self):
