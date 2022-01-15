@@ -1,11 +1,7 @@
-"""
-Simple miner society
-"""
-import time
 import pathlib
+import time
 import random
-from socialcraft import AgentManager
-from socialcraft.agent import Agent, AgentStatus
+from socialcraft import AgentManager, Agent, AgentStatus
 
 if __name__ == "__main__":
 
@@ -14,31 +10,31 @@ if __name__ == "__main__":
                            minecraft_port=25565)
 
     # Create Agent Blueprint
-    path = pathlib.Path(pathlib.Path().resolve(), "example/images/simple_bot/")
-    basic_miner = manager.generate_blueprint(str(path))
-    basic_miner.add_environment_variable("MINER_JUMPING_TIME", "2")
+    path = pathlib.Path(pathlib.Path().resolve(),
+                        "examples/lumberjack_society/blueprint/")
+    lumberjack_blueprint = manager.generate_blueprint("lumberjack", str(path))
 
     # Create multiple agents with different settings
     agents = []
 
-    for i in range(0, 10):
+    for i in range(0, 3):
         agent = manager.create_agent(name="Agent" + str(i),
-                                     blueprint=basic_miner)
+                                     blueprint=lumberjack_blueprint)
         agents.append(agent)
 
     # Randomly deploy and withdraw agents every minute
 
     for _ in range(0, 50):
-        agent: Agent = agents[random.randrange(0, 10)]
+        agent: Agent = agents[random.randrange(0, 3)]
 
         if agent.status == AgentStatus.ONLINE:
             agent.withdraw()
         elif agent.status == AgentStatus.OFFLINE:
             agent.deploy()
 
-        time.sleep(20)
+        time.sleep(10)
 
-    for i in range(0, 10):
+    for i in range(0, 3):
         if agents[i].status == AgentStatus.PAUSED or agents[
                 i].status == AgentStatus.ONLINE:
             agents[i].withdraw()
