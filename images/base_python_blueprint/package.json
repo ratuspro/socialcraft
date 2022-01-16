@@ -1,0 +1,17 @@
+{
+  "name": "simple_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "mineflayer": "^3.11.2",
+    "mineflayer-pathfinder": "^1.9.1",
+    "mineflayer-statemachine": "^1.6.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node main.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
