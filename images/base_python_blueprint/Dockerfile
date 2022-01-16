@@ -11,4 +11,4 @@ RUN pip install javascript
 
 # Run Agent
 EXPOSE 3000
-CMD ["python", "main.py"]
+CMD ["python", "-u", "main.py"]
