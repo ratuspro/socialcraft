@@ -1,6 +1,21 @@
 from pyclbr import Function
 import string
-from typing import Callable
+from typing import Callable, Literal
+from unicodedata import name
+
+
+class Perception:
+    def __init__(self, name: str, value: Literal) -> None:
+        self.__name = name
+        self.__value = value
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def value(self) -> Literal:
+        return self.__value
 
 
 class CognitiveSocialFrame:
@@ -9,14 +24,14 @@ class CognitiveSocialFrame:
         self.__affordances = []
 
     def add_salient_function(
-        self, salience_function: Callable[[list[str]], bool]
+        self, salience_function: Callable[[list[Perception]], bool]
     ) -> None:
         self.__salience_functions.append(salience_function)
 
     def add_affordances(self, affordance: str) -> None:
         self.__affordances.append(affordance)
 
-    def is_salient(self, context: list[str]) -> bool:
+    def is_salient(self, context: list[Perception]) -> bool:
         for salience_func in self.__salience_functions:
             if salience_func(context):
                 return True
@@ -35,7 +50,7 @@ class Manager:
     def add_frame(self, frame: CognitiveSocialFrame) -> None:
         self.__frames.add(frame)
 
-    def add_perception_to_buffer(self, perception: str) -> None:
+    def add_perception_to_buffer(self, perception: Perception) -> None:
         self.__perception_buffer.add(perception)
 
     def update_saliences(self) -> None:
@@ -53,3 +68,14 @@ class Manager:
             affordances = affordances.union(sal_frame.get_affordances())
 
         return affordances
+
+
+class CSF_Utils:
+    @staticmethod
+    def get_perception(
+        perceptions: list[Perception], perception_name: str
+    ) -> Literal:
+        for perception in perceptions:
+            if perception.name == perception_name:
+                return perception
+        return None

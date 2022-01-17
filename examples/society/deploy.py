@@ -18,7 +18,11 @@ if __name__ == "__main__":
     all_agents = manager.get_all_agents()
 
     for old_agent in all_agents:
+        old_agent.withdraw()
+
+    for old_agent in all_agents:
         old_agent.kill()
 
-    agent = manager.create_agent("Joe", blueprint=agent_blueprint)
-    agent.deploy()
+    for i in range(0, 9):
+        agent = manager.create_agent(f"Joe{i}", blueprint=agent_blueprint)
+        agent.deploy()
