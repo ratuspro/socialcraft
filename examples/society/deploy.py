@@ -18,11 +18,13 @@ if __name__ == "__main__":
     all_agents = manager.get_all_agents()
 
     for old_agent in all_agents:
-        old_agent.withdraw()
-
-    for old_agent in all_agents:
         old_agent.kill()
 
     for i in range(0, 9):
         agent = manager.create_agent(f"Joe{i}", blueprint=agent_blueprint)
         agent.deploy()
+
+    mayor = manager.create_agent(
+        f"FatherJohn", blueprint=agent_blueprint, custom_envs={"father": True}
+    )
+    mayor.deploy()

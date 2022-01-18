@@ -31,9 +31,9 @@ class CognitiveSocialFrame:
     def add_affordances(self, affordance: str) -> None:
         self.__affordances.append(affordance)
 
-    def is_salient(self, context: list[Perception]) -> bool:
+    def is_salient(self, context: list[Perception], bot) -> bool:
         for salience_func in self.__salience_functions:
-            if salience_func(context):
+            if salience_func(context,bot):
                 return True
         return False
 
@@ -53,11 +53,11 @@ class Manager:
     def add_perception_to_buffer(self, perception: Perception) -> None:
         self.__perception_buffer.add(perception)
 
-    def update_saliences(self) -> None:
+    def update_saliences(self, bot) -> None:
         self.__salient_frames.clear()
 
         for frame in self.__frames:
-            if frame.is_salient(self.__perception_buffer):
+            if frame.is_salient(self.__perception_buffer, bot):
                 self.__salient_frames.add(frame)
 
         self.__perception_buffer.clear()
@@ -72,9 +72,7 @@ class Manager:
 
 class CSF_Utils:
     @staticmethod
-    def get_perception(
-        perceptions: list[Perception], perception_name: str
-    ) -> Literal:
+    def get_perception(perceptions: list[Perception], perception_name: str) -> Literal:
         for perception in perceptions:
             if perception.name == perception_name:
                 return perception
