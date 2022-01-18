@@ -190,7 +190,6 @@ if is_father:
     csf_manager.add_frame(visit_citizens)
 
 ready = False
-
 once(bot, "spawn")
 print("I spawned 👋")
 mcdata = require("minecraft-data")(bot.version)
@@ -234,6 +233,7 @@ def execute_plans(bot):
 
     if not ready:
         return
+    time_since_last_update = 0
     print("New Tick:")
     affordances = csf_manager.get_affordances()
     print(affordances)
@@ -297,7 +297,7 @@ def execute_plans(bot):
                 Utils.chat_if_close(
                     f"It's {entity.username}!", bot.entity.position, bot
                 )
-                bot.lookAt(entity.position.offset(0, entity.height, 0))
+                bot.lookAt(entity.position)
                 break
 
     elif ID_AFF_LUMBERJACK in affordances:
