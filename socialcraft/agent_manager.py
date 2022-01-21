@@ -131,6 +131,8 @@ class AgentManager:
             "password": minecraft_password,
         }
 
+        self.__setup_messaging()
+
     def __get_docker_client(self) -> Optional[DockerClient]:
         return self.__docker_client
 
@@ -358,3 +360,19 @@ class AgentManager:
         blueprint = AgentBlueprint(image[0], name)
 
         return blueprint
+
+    def __setup_messaging(self):
+        if (
+            len(
+                self.__get_docker_client().containers.list(
+                    filters={"label": "socialcraft_brooker"}
+                )
+            )
+            == 0
+        ):
+            self.__get_docker_client().containers.run(
+                "rabbitmq",
+                detach=True,
+                ports={"5672/tcp": 5672},
+                labels=["socialcraft_brooker"],
+            )

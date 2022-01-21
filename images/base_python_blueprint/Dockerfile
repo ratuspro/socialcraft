@@ -7,7 +7,7 @@ COPY package.json ./
 RUN npm install -g mineflayer mineflayer-pathfinder mineflayer-statemachine minecraft-data vec3
 
 # Add javascript module to python
-RUN pip install javascript
+RUN pip install javascript pika
 
 # Run Agent
 EXPOSE 3000
