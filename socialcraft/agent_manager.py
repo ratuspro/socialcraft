@@ -1,15 +1,15 @@
 """
 This module defines the AgentManager class
 """
+from cmath import e
 from typing import Dict, Optional
-from urllib import request
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
 from docker.models.images import Image
 from .agent import Agent
-import pika
 import requests
+import time
 
 
 def append_if(entry: str, original: list, test: bool) -> list:
@@ -202,6 +202,10 @@ class AgentManager:
 
         container_envs["AGENT_NAME"] = name
 
+        container_envs["RABBITMQ_HOST"] = "host.docker.internal"
+        container_envs["RABBITMQ_PORT"] = "5672"
+        container_envs["RABBITMQ_VIRTUAL_HOST"] = "/"
+
         container_envs.update(custom_envs)
 
         for blueprint_env in blueprint.environment_variables:
@@ -384,37 +388,13 @@ class AgentManager:
                 },
             )
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 4c96a18 (Add socialcraft infrastructure)
-        self.__brooker_connection = None
-
-        while self.__brooker_connection is None:
+        while True:
             try:
-                cred = pika.PlainCredentials("socialcraft", "redstone")
-                self.__brooker_connection = pika.BlockingConnection(
-                    pika.ConnectionParameters("host.docker.internal", credentials=cred)
-                )
-                self.__brooker_channel = self.__brooker_connection.channel()
-            except:
-<<<<<<< HEAD
-=======
+                requests.get(f"http://host.docker.internal:15672/api")
+                return
+            except requests.exceptions.ConnectionError as e:
                 time.sleep(3)
->>>>>>> 4c96a18 (Add socialcraft infrastructure)
-                print("Failed to connect. Trying again...")
 
-        self.__brooker_channel.queue_declare(queue="hello")
-        self.__brooker_channel.basic_publish(
-            exchange="", routing_key="hello", body="Hello World!"
-        )
-        self.__brooker_connection.close()
-
-<<<<<<< HEAD
-=======
->>>>>>> 9a0d388 (Add Sociacraft infrastructure)
->>>>>>> 4c96a18 (Add socialcraft infrastructure)
     def __add_agent_to_brooker(self, name):
         res = requests.put(
             f"http://host.docker.internal:15672/api/users/{name}",
