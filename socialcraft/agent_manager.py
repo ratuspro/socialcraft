@@ -389,25 +389,6 @@ class AgentManager:
                 },
             )
 
-        self.__brooker_connection = None
-
-        while self.__brooker_connection is None:
-            try:
-                cred = pika.PlainCredentials("socialcraft", "redstone")
-                self.__brooker_connection = pika.BlockingConnection(
-                    pika.ConnectionParameters("host.docker.internal", credentials=cred)
-                )
-                self.__brooker_channel = self.__brooker_connection.channel()
-            except:
-                time.sleep(3)
-                print("Failed to connect. Trying again...")
-
-        self.__brooker_channel.queue_declare(queue="hello")
-        self.__brooker_channel.basic_publish(
-            exchange="", routing_key="hello", body="Hello World!"
-        )
-        self.__brooker_connection.close()
-
     def __add_agent_to_brooker(self, name):
         res = requests.put(
             f"http://host.docker.internal:15672/api/users/{name}",
