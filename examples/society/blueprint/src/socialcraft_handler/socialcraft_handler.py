@@ -10,9 +10,7 @@ class SocialcraftHandler:
     def load(self):
         while self.__connection is None:
             try:
-                self.__connection = pika.BlockingConnection(
-                    pika.ConnectionParameters(host="host.docker.internal")
-                )
+                self.__connection = pika.BlockingConnection(pika.ConnectionParameters(host="host.docker.internal"))
             except:
                 time.sleep(3)
                 print("Failed to connect. Trying again...")

@@ -23,9 +23,7 @@ class CognitiveSocialFrame:
         self.__salience_functions = []
         self.__affordances = []
 
-    def add_salient_function(
-        self, salience_function: Callable[[list[Perception]], bool]
-    ) -> None:
+    def add_salient_function(self, salience_function: Callable[[list[Perception]], bool]) -> None:
         self.__salience_functions.append(salience_function)
 
     def add_affordances(self, affordance: str) -> None:
@@ -33,7 +31,7 @@ class CognitiveSocialFrame:
 
     def is_salient(self, context: list[Perception], bot) -> bool:
         for salience_func in self.__salience_functions:
-            if salience_func(context,bot):
+            if salience_func(context, bot):
                 return True
         return False
 

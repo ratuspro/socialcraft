@@ -165,9 +165,7 @@ class AgentManager:
 
         return agents
 
-    def create_agent(
-        self, name: str, blueprint: AgentBlueprint, custom_envs: Dict = {}
-    ) -> Optional[Agent]:
+    def create_agent(self, name: str, blueprint: AgentBlueprint, custom_envs: Dict = {}) -> Optional[Agent]:
         """
         Creates a new agent based on a previously created prototype
         """
@@ -210,9 +208,7 @@ class AgentManager:
 
         for blueprint_env in blueprint.environment_variables:
             if blueprint_env not in container_envs:
-                container_envs[blueprint_env] = blueprint.environment_variables[
-                    blueprint_env
-                ]
+                container_envs[blueprint_env] = blueprint.environment_variables[blueprint_env]
 
         self.__add_agent_to_brooker(name)
 
@@ -363,18 +359,14 @@ class AgentManager:
         """
         Create a new blueprint for agents based on agent_source_path
         """
-        image = self.__get_docker_client().images.build(
-            tag=name, path=agent_source_path, rm=True
-        )
+        image = self.__get_docker_client().images.build(tag=name, path=agent_source_path, rm=True)
         blueprint = AgentBlueprint(image[0], name)
 
         return blueprint
 
     def __setup_messaging(self):
 
-        socialcraft_brookers = self.__get_docker_client().containers.list(
-            filters={"name": "socialcraft-brooker"}
-        )
+        socialcraft_brookers = self.__get_docker_client().containers.list(filters={"name": "socialcraft-brooker"})
 
         if len(socialcraft_brookers) == 0:
             self.__get_docker_client().containers.run(

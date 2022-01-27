@@ -17,9 +17,7 @@ class Socialcraft_Handler:
 
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         handler.setFormatter(formatter)
         self.__logger.addHandler(handler)
 
@@ -31,44 +29,26 @@ class Socialcraft_Handler:
         elif "AGENT_NAME" in os.environ:
             self.__botConfig["username"] = os.environ.get("AGENT_NAME")
 
-        self.__botConfig["host"] = (
-            os.environ.get("MINECRAFT_HOST")
-            if "MINECRAFT_HOST" in os.environ
-            else "localhost"
-        )
+        self.__botConfig["host"] = os.environ.get("MINECRAFT_HOST") if "MINECRAFT_HOST" in os.environ else "localhost"
 
-        self.__botConfig["port"] = (
-            os.environ.get("MINECRAFT_PORT")
-            if "MINECRAFT_PORT" in os.environ
-            else "25565"
-        )
+        self.__botConfig["port"] = os.environ.get("MINECRAFT_PORT") if "MINECRAFT_PORT" in os.environ else "25565"
 
         self.__botConfig["password"] = (
-            os.environ.get("MINECRAFT_PASSWORD")
-            if "MINECRAFT_PASSWORD" in os.environ
-            else ""
+            os.environ.get("MINECRAFT_PASSWORD") if "MINECRAFT_PASSWORD" in os.environ else ""
         )
 
         self.__botConfig["version"] = (
-            os.environ.get("MINECRAFT_VERSION")
-            if "MINECRAFT_VERSION" in os.environ
-            else False
+            os.environ.get("MINECRAFT_VERSION") if "MINECRAFT_VERSION" in os.environ else False
         )
 
         self.__botConfig["brooker_host"] = (
-            os.environ.get("RABBITMQ_HOST")
-            if "RABBITMQ_HOST" in os.environ
-            else "localhost"
+            os.environ.get("RABBITMQ_HOST") if "RABBITMQ_HOST" in os.environ else "localhost"
         )
 
-        self.__botConfig["brooker_port"] = (
-            os.environ.get("RABBITMQ_PORT") if "RABBITMQ_PORT" in os.environ else 5672
-        )
+        self.__botConfig["brooker_port"] = os.environ.get("RABBITMQ_PORT") if "RABBITMQ_PORT" in os.environ else 5672
 
         self.__botConfig["brooker_virtual_host"] = (
-            os.environ.get("RABBITMQ_VIRTUAL_HOST")
-            if "RABBITMQ_VIRTUAL_HOST" in os.environ
-            else "/"
+            os.environ.get("RABBITMQ_VIRTUAL_HOST") if "RABBITMQ_VIRTUAL_HOST" in os.environ else "/"
         )
 
         self.__logger.info("### Agent Setup Configuration:")
@@ -80,9 +60,7 @@ class Socialcraft_Handler:
         self.__logger.info(f"Agent Name: {self.__botConfig['username']}")
         self.__logger.info(f"Brooker Host: {self.__botConfig['brooker_host']}")
         self.__logger.info(f"Brooker Port: {self.__botConfig['brooker_port']}")
-        self.__logger.info(
-            f"Brooker Virtual Host: {self.__botConfig['brooker_virtual_host']}"
-        )
+        self.__logger.info(f"Brooker Virtual Host: {self.__botConfig['brooker_virtual_host']}")
 
     def connect(self):
         """
@@ -110,9 +88,7 @@ class Socialcraft_Handler:
         self.__channel.exchange_declare(exchange="world", exchange_type="topic")
 
         self.__logger.info("Setting up receiving queues")
-        self.__receiving_queue_name = self.__channel.queue_declare(
-            queue="", exclusive=True
-        ).method.queue
+        self.__receiving_queue_name = self.__channel.queue_declare(queue="", exclusive=True).method.queue
         self.__channel.queue_bind(
             exchange="world",
             queue=self.__receiving_queue_name,
@@ -188,9 +164,7 @@ class Socialcraft_Handler:
     def bot(self) -> mineflayer.Bot:
         """Returns mineflayer's bot associated with this agent"""
         if not self.__bot:
-            self.__logger.error(
-                "Trying to get bot without establishing a connection first"
-            )
+            self.__logger.error("Trying to get bot without establishing a connection first")
         return self.__bot
 
     def __del__(self):

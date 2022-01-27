@@ -11,9 +11,7 @@ if __name__ == "__main__":
     # Create Agent Blueprint
     path = pathlib.Path(os.path.dirname(os.path.realpath(__file__)), "blueprint/")
 
-    agent_blueprint = manager.generate_blueprint(
-        name="social_bot", agent_source_path=str(path)
-    )
+    agent_blueprint = manager.generate_blueprint(name="social_bot", agent_source_path=str(path))
 
     all_agents = manager.get_all_agents()
 
@@ -24,7 +22,5 @@ if __name__ == "__main__":
         agent = manager.create_agent(f"Joe{i}", blueprint=agent_blueprint)
         agent.deploy()
 
-    mayor = manager.create_agent(
-        f"FatherJohn", blueprint=agent_blueprint, custom_envs={"father": True}
-    )
+    mayor = manager.create_agent(f"FatherJohn", blueprint=agent_blueprint, custom_envs={"father": True})
     mayor.deploy()

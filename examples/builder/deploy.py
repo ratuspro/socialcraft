@@ -11,9 +11,7 @@ if __name__ == "__main__":
 
     print("Creting Agent Blueprint...")
     path = pathlib.Path(os.path.dirname(os.path.realpath(__file__)), "blueprint/")
-    agent_blueprint = manager.generate_blueprint(
-        name="builder", agent_source_path=str(path)
-    )
+    agent_blueprint = manager.generate_blueprint(name="builder", agent_source_path=str(path))
     print("Created Agent Blueprint!")
 
     print("Killing all dangling agents...")
