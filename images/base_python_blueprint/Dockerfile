@@ -3,11 +3,12 @@ LABEL socialcraft_agent=''
 
 # Add Mineflayer modules
 WORKDIR /agent
-COPY package.json ./
 RUN npm install -g mineflayer mineflayer-pathfinder mineflayer-statemachine minecraft-data vec3
 
 # Add javascript module to python
-RUN pip install javascript
+RUN pip install javascript pika
+
+COPY socialcraft_handler/ ./socialcraft_handler/
 
 # Run Agent
 EXPOSE 3000

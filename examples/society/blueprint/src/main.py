@@ -3,6 +3,10 @@ from javascript import require, On, once
 import os
 from csf_manager import Manager, CognitiveSocialFrame, Perception, CSF_Utils
 from utils import Utils
+from socialcraft_handler import SocialcraftHandler
+
+sc = SocialcraftHandler()
+sc.load()
 
 Vec3 = require("vec3").Vec3
 
