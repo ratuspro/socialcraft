@@ -10,6 +10,7 @@ from docker.models.images import Image
 from .agent import Agent
 import pika
 import requests
+import time
 
 
 def append_if(entry: str, original: list, test: bool) -> list:
@@ -201,6 +202,10 @@ class AgentManager:
             container_envs["MINECRAFT_AUTH"] = self.__minecraft_config["auth"]
 
         container_envs["AGENT_NAME"] = name
+
+        container_envs["RABBITMQ_HOST"] = "host.docker.internal"
+        container_envs["RABBITMQ_PORT"] = "5672"
+        container_envs["RABBITMQ_VIRTUAL_HOST"] = "/"
 
         container_envs.update(custom_envs)
 
@@ -394,6 +399,7 @@ class AgentManager:
                 )
                 self.__brooker_channel = self.__brooker_connection.channel()
             except:
+                time.sleep(3)
                 print("Failed to connect. Trying again...")
 
         self.__brooker_channel.queue_declare(queue="hello")
