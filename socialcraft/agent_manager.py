@@ -384,6 +384,11 @@ class AgentManager:
                 },
             )
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 4c96a18 (Add socialcraft infrastructure)
         self.__brooker_connection = None
 
         while self.__brooker_connection is None:
@@ -394,6 +399,10 @@ class AgentManager:
                 )
                 self.__brooker_channel = self.__brooker_connection.channel()
             except:
+<<<<<<< HEAD
+=======
+                time.sleep(3)
+>>>>>>> 4c96a18 (Add socialcraft infrastructure)
                 print("Failed to connect. Trying again...")
 
         self.__brooker_channel.queue_declare(queue="hello")
@@ -402,6 +411,10 @@ class AgentManager:
         )
         self.__brooker_connection.close()
 
+<<<<<<< HEAD
+=======
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
+>>>>>>> 4c96a18 (Add socialcraft infrastructure)
     def __add_agent_to_brooker(self, name):
         res = requests.put(
             f"http://host.docker.internal:15672/api/users/{name}",

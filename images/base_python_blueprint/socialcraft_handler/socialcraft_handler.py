@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 from ast import Str
+=======
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
 import os
 from javascript import require, once
 import logging
 import sys
 import pika
 import time
+<<<<<<< HEAD
 from typing import Tuple, Optional
+=======
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
 
 pathfinder = require("mineflayer-pathfinder")
 mineflayer = require("mineflayer")
@@ -13,6 +19,10 @@ mineflayer = require("mineflayer")
 
 class Socialcraft_Handler:
     def __init__(self) -> None:
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.DEBUG)
 
@@ -86,10 +96,14 @@ class Socialcraft_Handler:
         )
 
     def connect(self):
+<<<<<<< HEAD
         """
         Connects the agent to the message brooker, spawns it in minecraft and loads its dependencies
         """
         self.__logger.info("Connecting to Message Brooker...")
+=======
+        self.__logger.info("1. Connecting to Message Brooker...")
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
         while self.__connection is None:
             try:
                 credentials = pika.PlainCredentials(self.name, self.name)
@@ -104,6 +118,7 @@ class Socialcraft_Handler:
             except pika.exceptions.AMQPError as e:
                 print(e)
                 time.sleep(3)
+<<<<<<< HEAD
                 self.__logger.info("   Failed to connect. Trying again...")
 
         self.__logger.info("Declare Exchanges")
@@ -133,10 +148,29 @@ class Socialcraft_Handler:
         self.__logger.info("Bot sucessfully spawned!")
 
         self.__logger.info("Setting up mineflayer-pathfinder...")
+=======
+                self.__logger.info("1. Failed to connect. Trying again...")
+
+        self.__channel = self.__connection.channel()
+        self.__logger.info("1. Connected to Message Brooker!")
+
+        self.__logger.info("2. Creating Bot...")
+        self.__bot = mineflayer.createBot(self.__botConfig)
+
+        self.__logger.info("3. Loading plugins...")
+        self.__bot.loadPlugin(pathfinder.pathfinder)
+
+        self.__logger.info("2. Waiting for bot to spawn...")
+        once(self.__bot, "spawn")
+        self.__logger.info("2. Bot sucessfully spawned!")
+
+        self.__logger.info("3. Setting up mineflayer-pathfinder...")
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
         mcData = require("minecraft-data")(self.__bot.version)
         movements = pathfinder.Movements(self.__bot, mcData)
         self.__bot.pathfinder.setMovements(movements)
 
+<<<<<<< HEAD
         self.__logger.info("Waiting for pathfinder...")
         while not self.__bot.hasPlugin(pathfinder.pathfinder):
             pass
@@ -188,13 +222,29 @@ class Socialcraft_Handler:
     @property
     def bot(self) -> mineflayer.Bot:
         """Returns mineflayer's bot associated with this agent"""
+=======
+        self.__logger.info("3. Waiting for pathfinder...")
+        while not self.__bot.hasPlugin(pathfinder.pathfinder):
+            pass
+        self.__logger.info("3. Pathfinder ready!")
+
+    @property
+    def name(self):
+        return self.__botConfig["username"]
+
+    @property
+    def bot(self):
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
         if not self.__bot:
             self.__logger.error(
                 "Trying to get bot without establishing a connection first"
             )
         return self.__bot
+<<<<<<< HEAD
 
     def __del__(self):
         self.__logger.info("Closing Brooker connection...")
         self.__connection.close()
         self.__logger.info("Brooker connection closed.")
+=======
+>>>>>>> 9a0d388 (Add Sociacraft infrastructure)
