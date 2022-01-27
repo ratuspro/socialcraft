@@ -2,11 +2,14 @@
 This module defines the AgentManager class
 """
 from typing import Dict, Optional
+from urllib import request
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
 from docker.models.images import Image
 from .agent import Agent
+import pika
+import requests
 
 
 def append_if(entry: str, original: list, test: bool) -> list:
@@ -207,6 +210,8 @@ class AgentManager:
                     blueprint_env
                 ]
 
+        self.__add_agent_to_brooker(name)
+
         agent_container = self.__get_docker_client().containers.create(
             blueprint.image,
             name=name,
@@ -362,17 +367,50 @@ class AgentManager:
         return blueprint
 
     def __setup_messaging(self):
-        if (
-            len(
-                self.__get_docker_client().containers.list(
-                    filters={"label": "socialcraft_brooker"}
-                )
-            )
-            == 0
-        ):
+
+        socialcraft_brookers = self.__get_docker_client().containers.list(
+            filters={"name": "socialcraft-brooker"}
+        )
+
+        if len(socialcraft_brookers) == 0:
             self.__get_docker_client().containers.run(
-                "rabbitmq",
+                "rabbitmq:management",
                 detach=True,
-                ports={"5672/tcp": 5672},
-                labels=["socialcraft_brooker"],
+                ports={"5672/tcp": 5672, "15672/tcp": 15672},
+                name="socialcraft-brooker",
+                environment={
+                    "RABBITMQ_DEFAULT_USER": "socialcraft",
+                    "RABBITMQ_DEFAULT_PASS": "redstone",
+                },
             )
+
+        self.__brooker_connection = None
+
+        while self.__brooker_connection is None:
+            try:
+                cred = pika.PlainCredentials("socialcraft", "redstone")
+                self.__brooker_connection = pika.BlockingConnection(
+                    pika.ConnectionParameters("host.docker.internal", credentials=cred)
+                )
+                self.__brooker_channel = self.__brooker_connection.channel()
+            except:
+                print("Failed to connect. Trying again...")
+
+        self.__brooker_channel.queue_declare(queue="hello")
+        self.__brooker_channel.basic_publish(
+            exchange="", routing_key="hello", body="Hello World!"
+        )
+        self.__brooker_connection.close()
+
+    def __add_agent_to_brooker(self, name):
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/users/{name}",
+            json={"password": name, "tags": "administrator"},
+            auth=("socialcraft", "redstone"),
+        )
+
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/permissions/%2f/{name}",
+            json={"configure": ".*", "write": ".*", "read": ".*"},
+            auth=("socialcraft", "redstone"),
+        )
