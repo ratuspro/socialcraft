@@ -1,4 +1,3 @@
-from ast import Str
 import os
 from javascript import require, once
 import logging
@@ -181,7 +180,7 @@ class Socialcraft_Handler:
         return response[2]
 
     @property
-    def name(self) -> Str:
+    def name(self) -> str:
         """Agent's name"""
         return self.__botConfig["username"]
 

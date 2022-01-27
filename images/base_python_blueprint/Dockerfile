@@ -8,8 +8,7 @@ RUN npm install -g mineflayer mineflayer-pathfinder mineflayer-statemachine mine
 # Add javascript module to python
 RUN pip install javascript pika
 
-# Copy handler
-COPY ./socialcraft_handler ./socialcraft_handler
+COPY socialcraft_handler/ ./socialcraft_handler/
 
 # Run Agent
 EXPOSE 3000

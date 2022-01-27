@@ -1,14 +1,13 @@
 """
 This module defines the AgentManager class
 """
+from cmath import e
 from typing import Dict, Optional
-from urllib import request
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
 from docker.models.images import Image
 from .agent import Agent
-import pika
 import requests
 import time
 
@@ -388,6 +387,13 @@ class AgentManager:
                     "RABBITMQ_DEFAULT_PASS": "redstone",
                 },
             )
+
+        while True:
+            try:
+                requests.get(f"http://host.docker.internal:15672/api")
+                return
+            except requests.exceptions.ConnectionError as e:
+                time.sleep(3)
 
     def __add_agent_to_brooker(self, name):
         res = requests.put(
