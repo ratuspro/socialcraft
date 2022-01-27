@@ -1,9 +1,11 @@
+from ast import Str
 import os
 from javascript import require, once
 import logging
 import sys
 import pika
 import time
+from typing import Tuple, Optional
 
 pathfinder = require("mineflayer-pathfinder")
 mineflayer = require("mineflayer")
@@ -11,7 +13,6 @@ mineflayer = require("mineflayer")
 
 class Socialcraft_Handler:
     def __init__(self) -> None:
-
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.DEBUG)
 
@@ -85,7 +86,10 @@ class Socialcraft_Handler:
         )
 
     def connect(self):
-        self.__logger.info("1. Connecting to Message Brooker...")
+        """
+        Connects the agent to the message brooker, spawns it in minecraft and loads its dependencies
+        """
+        self.__logger.info("Connecting to Message Brooker...")
         while self.__connection is None:
             try:
                 credentials = pika.PlainCredentials(self.name, self.name)
@@ -100,39 +104,97 @@ class Socialcraft_Handler:
             except pika.exceptions.AMQPError as e:
                 print(e)
                 time.sleep(3)
-                self.__logger.info("1. Failed to connect. Trying again...")
+                self.__logger.info("   Failed to connect. Trying again...")
 
+        self.__logger.info("Declare Exchanges")
         self.__channel = self.__connection.channel()
-        self.__logger.info("1. Connected to Message Brooker!")
+        self.__channel.exchange_declare(exchange="world", exchange_type="topic")
 
-        self.__logger.info("2. Creating Bot...")
+        self.__logger.info("Setting up receiving queues")
+        self.__receiving_queue_name = self.__channel.queue_declare(
+            queue="", exclusive=True
+        ).method.queue
+        self.__channel.queue_bind(
+            exchange="world",
+            queue=self.__receiving_queue_name,
+            routing_key=self.name,
+        )
+
+        self.__logger.info("Connected to Message Brooker!")
+
+        self.__logger.info("Creating Bot...")
         self.__bot = mineflayer.createBot(self.__botConfig)
 
-        self.__logger.info("3. Loading plugins...")
+        self.__logger.info("Loading plugins...")
         self.__bot.loadPlugin(pathfinder.pathfinder)
 
-        self.__logger.info("2. Waiting for bot to spawn...")
+        self.__logger.info("Waiting for bot to spawn...")
         once(self.__bot, "spawn")
-        self.__logger.info("2. Bot sucessfully spawned!")
+        self.__logger.info("Bot sucessfully spawned!")
 
-        self.__logger.info("3. Setting up mineflayer-pathfinder...")
+        self.__logger.info("Setting up mineflayer-pathfinder...")
         mcData = require("minecraft-data")(self.__bot.version)
         movements = pathfinder.Movements(self.__bot, mcData)
         self.__bot.pathfinder.setMovements(movements)
 
-        self.__logger.info("3. Waiting for pathfinder...")
+        self.__logger.info("Waiting for pathfinder...")
         while not self.__bot.hasPlugin(pathfinder.pathfinder):
             pass
-        self.__logger.info("3. Pathfinder ready!")
+        self.__logger.info("Pathfinder ready!")
+
+    def send_message(
+        self,
+        position: Tuple[float, float, float],
+        labels: list[str],
+        message: str,
+        target: str,
+    ) -> None:
+        """Sends a message using a message to the target agent
+
+        Args:
+            position (Tuple[float,float,float]): the position where the emitter sent the message from
+            labels (list[str]): optional labels to describe the message
+            message (str): the actual message
+            target (str): the name of the target agent
+        """
+        self.__logger.debug(
+            f"Sending from ({position[0]},{position[1]},{position[2]}) to {target} the following message: \n {message}"
+        )
+
+        self.__channel.basic_publish(
+            "world",
+            body=message,
+            routing_key=target,
+            properties=pika.BasicProperties(delivery_mode=2),
+        )
+
+    def receive_message(self) -> Optional[str]:
+        """Attempts to receive a message addressed to this agent.
+        If no message is available, return None
+
+        Returns:
+            str: message body
+        """
+        response = self.__channel.basic_get(self.__receiving_queue_name, auto_ack=True)
+        if response[0] is not None:
+            self.__logger.debug(f"Received the following message: {response[2]}")
+        return response[2]
 
     @property
-    def name(self):
+    def name(self) -> Str:
+        """Agent's name"""
         return self.__botConfig["username"]
 
     @property
-    def bot(self):
+    def bot(self) -> mineflayer.Bot:
+        """Returns mineflayer's bot associated with this agent"""
         if not self.__bot:
             self.__logger.error(
                 "Trying to get bot without establishing a connection first"
             )
         return self.__bot
+
+    def __del__(self):
+        self.__logger.info("Closing Brooker connection...")
+        self.__connection.close()
+        self.__logger.info("Brooker connection closed.")
