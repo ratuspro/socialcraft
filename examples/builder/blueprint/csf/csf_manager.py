@@ -1,8 +1,9 @@
+from abc import ABC, abstractmethod
 from pyclbr import Function
 import string
 from typing import Any, Callable, Literal
 from unicodedata import name
-from frames.cogntive_social_frame import CognitiveSocialFrame
+from .frames import CognitiveSocialFrame
 
 
 class Perception:
@@ -17,6 +18,17 @@ class Perception:
     @property
     def value(self) -> Any:
         return self.__value
+
+    def __hash__(self) -> int:
+        return hash(self.name) + hash(self.value)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, Perception):
+            return False
+        return self.__name == o.name and self.__value == o.value
+
+    def __str__(self) -> str:
+        return f"<name: {self.name}, value: {str(self.value)}>"
 
 
 class Affordance:
@@ -45,20 +57,39 @@ class Context:
     def __init__(self) -> None:
         self.__perceptions = {}
 
-    def get_perception(self, name: string) -> Any | None:
+    def get_perception(self, name: string) -> Perception | None:
         if name in self.__perceptions:
             return self.__perceptions[name]
         return None
 
+    def get_perceptions(self) -> set[Perception]:
+        return list(self.__perceptions.values())
+
     def add_perception(self, perception: Perception) -> None:
-        self.__perceptions[perception.name] = perception.value
+        self.__perceptions[perception.name] = perception
+
+    def add_perceptions(self, perceptions: set[Perception]) -> None:
+        for perception in perceptions:
+            self.__perceptions[perception.name] = perception
+
+
+class Interpreter(ABC):
+    @abstractmethod
+    def process_perceptions(self, perceptions: list[Perception]) -> list[Perception]:
+        pass
 
 
 class Brain:
+    __frames: set[CognitiveSocialFrame]
+    __perception_buffer: set[Perception]
+    __salient_frames: set[CognitiveSocialFrame]
+    __interpreters: set[Interpreter]
+
     def __init__(self) -> None:
         self.__frames = set()
         self.__perception_buffer = set()
         self.__salient_frames = set()
+        self.__interpreters = set()
 
     def add_frame(self, frame: CognitiveSocialFrame) -> None:
         self.__frames.add(frame)
@@ -66,12 +97,24 @@ class Brain:
     def add_perception_to_buffer(self, perception: Perception) -> None:
         self.__perception_buffer.add(perception)
 
+    def add_interpreter(self, interpreter: Interpreter) -> None:
+        self.__interpreters.add(interpreter)
+
     def update_saliences(self) -> None:
         self.__salient_frames.clear()
 
         context = Context()
         for perception in self.__perception_buffer:
             context.add_perception(perception)
+
+        perceptions = context.get_perceptions()
+        for interpreter in self.__interpreters:
+            context.add_perceptions(interpreter.process_perceptions(perceptions))
+
+        print("dasasda")
+
+        for perception in context.get_perceptions():
+            print(perception)
 
         for frame in self.__frames:
             if frame.is_salient(context):
