@@ -3,6 +3,10 @@ from javascript import require, On, once
 import os
 from csf_manager import Manager, CognitiveSocialFrame, Perception, CSF_Utils
 from utils import Utils
+from socialcraft_handler import SocialcraftHandler
+
+sc = SocialcraftHandler()
+sc.load()
 
 Vec3 = require("vec3").Vec3
 
@@ -128,13 +132,10 @@ respect_frame.add_affordances(ID_AFF_SUBSERVIENT)
 
 def respectable_nearby(perceptions, bot):
     for entity_key in bot.entities:
-        if (
-            bot.entities[entity_key].name == "player"
-            and "Father" in bot.entities[entity_key].username
-        ):
-            distance = pow(
-                bot.entity.position.x - bot.entities[entity_key].position.x, 2
-            ) + pow(bot.entity.position.z - bot.entities[entity_key].position.z, 2)
+        if bot.entities[entity_key].name == "player" and "Father" in bot.entities[entity_key].username:
+            distance = pow(bot.entity.position.x - bot.entities[entity_key].position.x, 2) + pow(
+                bot.entity.position.z - bot.entities[entity_key].position.z, 2
+            )
             if distance < 25:
                 return True
     return False
@@ -206,9 +207,7 @@ ready = True
 def handleTick(*args):
 
     # Add time of the day
-    csf_manager.add_perception_to_buffer(
-        Perception(ID_PER_TIME_OF_DAY, bot.time.timeOfDay)
-    )
+    csf_manager.add_perception_to_buffer(Perception(ID_PER_TIME_OF_DAY, bot.time.timeOfDay))
 
     # Add day of the week
     week_day = ""
@@ -244,9 +243,7 @@ def execute_plans(bot):
         next_house = random.choice([Vec3(50, 4, 30), Vec3(63, 4, 30), Vec3(75, 4, 30)])
 
         if not bot.pathfinder.isMoving():
-            Utils.chat_if_close(
-                "Let's say hi to another citizen!", bot.entity.position, bot
-            )
+            Utils.chat_if_close("Let's say hi to another citizen!", bot.entity.position, bot)
             if bot.entity.position.distanceTo(next_house) > 5:
                 Goal = pathfinder.goals.GoalNear(
                     next_house.x,
@@ -263,15 +260,11 @@ def execute_plans(bot):
                 )
     elif ID_AFF_SURVEIL in affordances:
 
-        next_workplace = random.choice(
-            [Vec3(16, 4, -1), Vec3(21, 4, 7), Vec3(21, 4, -9)]
-        )
+        next_workplace = random.choice([Vec3(16, 4, -1), Vec3(21, 4, 7), Vec3(21, 4, -9)])
 
         if not bot.pathfinder.isMoving():
             if bot.entity.position.distanceTo(next_workplace) > 5:
-                Utils.chat_if_close(
-                    "Time to see what my citizens are doing.", bot.entity.position, bot
-                )
+                Utils.chat_if_close("Time to see what my citizens are doing.", bot.entity.position, bot)
                 Goal = pathfinder.goals.GoalNear(
                     next_workplace.x,
                     next_workplace.y,
@@ -279,9 +272,7 @@ def execute_plans(bot):
                     1,
                 )
             else:
-                Utils.chat_if_close(
-                    "Seems like they are working.", bot.entity.position, bot
-                )
+                Utils.chat_if_close("Seems like they are working.", bot.entity.position, bot)
                 Goal = pathfinder.goals.GoalNear(
                     next_workplace.x + random.uniform(-1.5, 1.5),
                     next_workplace.y,
@@ -294,9 +285,7 @@ def execute_plans(bot):
         for entity_key in bot.entities:
             entity = bot.entities[entity_key]
             if entity.name == "player" and "Father" in entity.username:
-                Utils.chat_if_close(
-                    f"It's {entity.username}!", bot.entity.position, bot
-                )
+                Utils.chat_if_close(f"It's {entity.username}!", bot.entity.position, bot)
                 bot.lookAt(entity.position)
                 break
 
@@ -330,16 +319,12 @@ def execute_plans(bot):
                 Town_Plaza_Position.z + random.uniform(-3, 3),
                 1,
             )
-            Utils.chat_if_close(
-                "Feels good to visit the plaza", bot.entity.position, bot
-            )
+            Utils.chat_if_close("Feels good to visit the plaza", bot.entity.position, bot)
     else:
         if not bot.pathfinder.isMoving():
             if bot.entity.position.distanceTo(House_Position) > 10:
                 Utils.chat_if_close("Time to go home", bot.entity.position, bot)
-                Goal = pathfinder.goals.GoalNear(
-                    House_Position["x"], House_Position["y"], House_Position["z"], 1
-                )
+                Goal = pathfinder.goals.GoalNear(House_Position["x"], House_Position["y"], House_Position["z"], 1)
             elif random.random() < 0.1:
                 Goal = pathfinder.goals.GoalNear(
                     House_Position.x + random.uniform(-3, 3),

@@ -48,20 +48,12 @@ class SocialCraftCli(cmd2.Cmd):
         self.minecraft_host = "host.docker.internal"
         self.minecraft_port = "25565"
 
-        self.add_settable(
-            cmd2.Settable(
-                "minecraft_host", string, "host for the minecraft server", self
-            )
-        )
+        self.add_settable(cmd2.Settable("minecraft_host", string, "host for the minecraft server", self))
 
-        self.add_settable(
-            cmd2.Settable("minecraft_port", int, "port of the minecraft server", self)
-        )
+        self.add_settable(cmd2.Settable("minecraft_port", int, "port of the minecraft server", self))
 
         # STARTUP SOCIALCRAFT MANAGER
-        self.manager = AgentManager(
-            minecraft_host=self.minecraft_host, minecraft_port=self.minecraft_port
-        )
+        self.manager = AgentManager(minecraft_host=self.minecraft_host, minecraft_port=self.minecraft_port)
 
     @cmd2.with_category(CMD_CATEGORY_AGENT_MANAGEMENT)
     def do_create(self):

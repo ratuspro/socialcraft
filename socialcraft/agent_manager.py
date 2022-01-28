@@ -1,12 +1,15 @@
 """
 This module defines the AgentManager class
 """
+from cmath import e
 from typing import Dict, Optional
 import docker
 from docker.models.containers import Container
 from docker.client import DockerClient
 from docker.models.images import Image
 from .agent import Agent
+import requests
+import time
 
 
 def append_if(entry: str, original: list, test: bool) -> list:
@@ -131,6 +134,8 @@ class AgentManager:
             "password": minecraft_password,
         }
 
+        self.__setup_messaging()
+
     def __get_docker_client(self) -> Optional[DockerClient]:
         return self.__docker_client
 
@@ -160,9 +165,7 @@ class AgentManager:
 
         return agents
 
-    def create_agent(
-        self, name: str, blueprint: AgentBlueprint, custom_envs: Dict = {}
-    ) -> Optional[Agent]:
+    def create_agent(self, name: str, blueprint: AgentBlueprint, custom_envs: Dict = {}) -> Optional[Agent]:
         """
         Creates a new agent based on a previously created prototype
         """
@@ -197,13 +200,17 @@ class AgentManager:
 
         container_envs["AGENT_NAME"] = name
 
+        container_envs["RABBITMQ_HOST"] = "host.docker.internal"
+        container_envs["RABBITMQ_PORT"] = "5672"
+        container_envs["RABBITMQ_VIRTUAL_HOST"] = "/"
+
         container_envs.update(custom_envs)
 
         for blueprint_env in blueprint.environment_variables:
             if blueprint_env not in container_envs:
-                container_envs[blueprint_env] = blueprint.environment_variables[
-                    blueprint_env
-                ]
+                container_envs[blueprint_env] = blueprint.environment_variables[blueprint_env]
+
+        self.__add_agent_to_brooker(name)
 
         agent_container = self.__get_docker_client().containers.create(
             blueprint.image,
@@ -352,9 +359,43 @@ class AgentManager:
         """
         Create a new blueprint for agents based on agent_source_path
         """
-        image = self.__get_docker_client().images.build(
-            tag=name, path=agent_source_path, rm=True
-        )
+        image = self.__get_docker_client().images.build(tag=name, path=agent_source_path, rm=True)
         blueprint = AgentBlueprint(image[0], name)
 
         return blueprint
+
+    def __setup_messaging(self):
+
+        socialcraft_brookers = self.__get_docker_client().containers.list(filters={"name": "socialcraft-brooker"})
+
+        if len(socialcraft_brookers) == 0:
+            self.__get_docker_client().containers.run(
+                "rabbitmq:management",
+                detach=True,
+                ports={"5672/tcp": 5672, "15672/tcp": 15672},
+                name="socialcraft-brooker",
+                environment={
+                    "RABBITMQ_DEFAULT_USER": "socialcraft",
+                    "RABBITMQ_DEFAULT_PASS": "redstone",
+                },
+            )
+
+        while True:
+            try:
+                requests.get(f"http://host.docker.internal:15672/api")
+                return
+            except requests.exceptions.ConnectionError as e:
+                time.sleep(3)
+
+    def __add_agent_to_brooker(self, name):
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/users/{name}",
+            json={"password": name, "tags": "administrator"},
+            auth=("socialcraft", "redstone"),
+        )
+
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/permissions/%2f/{name}",
+            json={"configure": ".*", "write": ".*", "read": ".*"},
+            auth=("socialcraft", "redstone"),
+        )
