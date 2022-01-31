@@ -167,6 +167,12 @@ class Socialcraft_Handler:
             self.__logger.error("Trying to get bot without establishing a connection first")
         return self.__bot
 
+    def has_init_env_variable(self, name) -> bool:
+        return f"SOCIALCRAFT_INIT_{name}" in os.environ
+
+    def get_init_env_variable(self, name) -> str:
+        return os.environ.get(f"SOCIALCRAFT_INIT_{name}")
+
     def __del__(self):
         self.__logger.info("Closing Brooker connection...")
         self.__connection.close()

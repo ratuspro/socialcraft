@@ -3,9 +3,13 @@ from javascript import On, require
 from socialcraft_handler import Socialcraft_Handler
 from csf import Brain, Interpreter, Perception, Context, Affordance, print_context
 from csf.frames import CognitiveSocialFrame
+import json
 
 pathfinder = require("mineflayer-pathfinder")
 Vec3 = require("vec3")
+
+####################
+### Interpreters
 
 
 class SocialRelationshipInterpreter(Interpreter):
@@ -61,6 +65,10 @@ class SleepInterpreter(Interpreter):
         return {Perception("SLEEPTIME", 0)}
 
 
+####################
+### Frames
+
+
 class BuilderFrame(CognitiveSocialFrame):
     def __init__(self) -> None:
         super().__init__({"WORKTIME"})
@@ -77,8 +85,9 @@ class BuilderFrame(CognitiveSocialFrame):
 
 
 class SleepFrame(CognitiveSocialFrame):
-    def __init__(self) -> None:
+    def __init__(self, bed_position) -> None:
         super().__init__({"SLEEPTIME"})
+        self.__bed_position = bed_position
 
     def is_salient(self, context: Context) -> bool:
         self.assert_valid_context(context)
@@ -91,7 +100,11 @@ class SleepFrame(CognitiveSocialFrame):
         return False
 
     def get_affordances(self) -> set[Affordance]:
-        return {Affordance("CAN_SLEEP", None, 1.0)}
+        return {Affordance("CAN_SLEEP", self.__bed_position, 1.0)}
+
+
+####################
+### Practices
 
 
 class GoToBed:
@@ -119,6 +132,10 @@ class GoToBed:
             lambda err, result: self.__sleep(),
         )
 
+    def exit(self) -> None:
+        if self.__bot.isSleeping:
+            self.__bot.wake()
+
     def __sleep(self):
         self.__bot.sleep(self.__bed)
 
@@ -133,8 +150,12 @@ csf.add_interpreter(WorkTimeInterpreter())
 csf.add_interpreter(SocialRelationshipInterpreter())
 csf.add_interpreter(SleepInterpreter(16000, 23999))
 csf.add_frame(BuilderFrame())
-csf.add_frame(SleepFrame())
 
+if handler.has_init_env_variable("bed"):
+    print("found bed")
+    bed_json = json.loads(handler.get_init_env_variable("bed"))
+    bed = Vec3(bed_json["x"], bed_json["y"], bed_json["z"])
+    csf.add_frame(SleepFrame(bed))
 
 # Start Bot
 bot = handler.bot
@@ -158,9 +179,9 @@ def handleTick(*args):
     if bot.onGoingPractice == None:
         for aff in csf.get_affordances():
             if aff.name == "CAN_SLEEP":
-                possibleActions.append((GoToBed(bot, Vec3(19, 4, 22)), aff.value))
+                print(aff.value)
+                possibleActions.append((GoToBed(bot, aff.value), aff.value))
 
         if len(possibleActions) > 0:
             possibleActions[0][0].start()
-
-        bot.onGoingPractice = possibleActions[0]
+            bot.onGoingPractice = possibleActions[0]

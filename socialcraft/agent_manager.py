@@ -204,7 +204,8 @@ class AgentManager:
         container_envs["RABBITMQ_PORT"] = "5672"
         container_envs["RABBITMQ_VIRTUAL_HOST"] = "/"
 
-        container_envs.update(custom_envs)
+        for custom_env_name, custom_env_value in custom_envs.items():
+            container_envs[f"SOCIALCRAFT_INIT_{custom_env_name}"] = custom_env_value
 
         for blueprint_env in blueprint.environment_variables:
             if blueprint_env not in container_envs:

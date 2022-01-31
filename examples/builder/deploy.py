@@ -23,16 +23,20 @@ if __name__ == "__main__":
     print("Killed all dangling agents!")
 
     print("Deploying Agents...")
-    a1 = manager.create_agent(f"Agent1", blueprint=agent_blueprint)
+    a1 = manager.create_agent(f"Agent1", blueprint=agent_blueprint, custom_envs={"bed": '{"x": 19, "y": 4, "z": 22}'})
     a1.deploy()
 
-    """ a2 = manager.create_agent(f"Agent2", blueprint=agent_blueprint)
+    a2 = manager.create_agent(f"Agent2", blueprint=agent_blueprint, custom_envs={"bed": '{"x": 19, "y": 4, "z": 26}'})
     a2.deploy()
 
-    a3 = manager.create_agent(f"Agent3", blueprint=agent_blueprint)
+    a3 = manager.create_agent(f"Agent3", blueprint=agent_blueprint, custom_envs={"bed": '{"x": 18, "y": 4, "z": 18}'})
     a3.deploy()
 
-    a4 = manager.create_agent(f"Agent4", blueprint=agent_blueprint)
-    a4.deploy() """
+    a4 = manager.create_agent(f"Agent4", blueprint=agent_blueprint, custom_envs={"bed": '{"x": 15, "y": 4, "z": 21}'})
+    a4.deploy()
+
+    for i in range(0, 30):
+        a = manager.create_agent("Agent_" + str(i), blueprint=agent_blueprint)
+        a.deploy()
 
     print("Agents deployed!")

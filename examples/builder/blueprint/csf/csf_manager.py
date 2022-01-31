@@ -46,7 +46,7 @@ class Affordance:
         return self.__value
 
     @property
-    def value(self) -> Any:
+    def salience(self) -> Any:
         return self.__salience
 
     def __repr__(self) -> str:
