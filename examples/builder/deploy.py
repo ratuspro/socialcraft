@@ -22,7 +22,17 @@ if __name__ == "__main__":
         print(f"  RIP {old_agent.name}!")
     print("Killed all dangling agents!")
 
-    print("Deploying Agent...")
-    builder = manager.create_agent(f"Builder", blueprint=agent_blueprint)
-    builder.deploy()
-    print("Agent deployed!")
+    print("Deploying Agents...")
+    a1 = manager.create_agent(f"Agent1", blueprint=agent_blueprint)
+    a1.deploy()
+
+    a2 = manager.create_agent(f"Agent2", blueprint=agent_blueprint)
+    a2.deploy()
+
+    a3 = manager.create_agent(f"Agent3", blueprint=agent_blueprint)
+    a3.deploy()
+
+    a4 = manager.create_agent(f"Agent4", blueprint=agent_blueprint)
+    a4.deploy()
+
+    print("Agents deployed!")

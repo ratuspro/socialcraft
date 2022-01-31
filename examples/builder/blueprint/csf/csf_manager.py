@@ -55,27 +55,30 @@ class Affordance:
 
 class Context:
     def __init__(self) -> None:
-        self.__perceptions = {}
+        self.__perceptions = set()
 
-    def get_perception(self, name: string) -> Perception | None:
-        if name in self.__perceptions:
-            return self.__perceptions[name]
-        return None
+    def get_perceptions(self, name: str = None) -> set[Perception]:
 
-    def get_perceptions(self) -> set[Perception]:
-        return list(self.__perceptions.values())
+        if name == None:
+            return set(self.__perceptions)
+
+        filtered_perceptions = set()
+        for perception in self.__perceptions:
+            if perception.name == name:
+                filtered_perceptions.add(perception)
+
+        return filtered_perceptions
 
     def add_perception(self, perception: Perception) -> None:
-        self.__perceptions[perception.name] = perception
+        self.__perceptions.add(perception)
 
     def add_perceptions(self, perceptions: set[Perception]) -> None:
-        for perception in perceptions:
-            self.__perceptions[perception.name] = perception
+        self.__perceptions.update(perceptions)
 
 
 class Interpreter(ABC):
     @abstractmethod
-    def process_perceptions(self, perceptions: list[Perception]) -> list[Perception]:
+    def process_perceptions(self, perceptions: Context) -> list[Perception]:
         pass
 
 
@@ -104,12 +107,10 @@ class Brain:
         self.__salient_frames.clear()
 
         context = Context()
-        for perception in self.__perception_buffer:
-            context.add_perception(perception)
+        context.add_perceptions(self.__perception_buffer)
 
-        perceptions = context.get_perceptions()
         for interpreter in self.__interpreters:
-            context.add_perceptions(interpreter.process_perceptions(perceptions))
+            context.add_perceptions(interpreter.process_perceptions(context))
 
         print("dasasda")
 

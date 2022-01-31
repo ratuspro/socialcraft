@@ -15,5 +15,5 @@ class CognitiveSocialFrame(ABC):
 
     def assert_valid_context(self, context) -> None:
         for neeeded_perception in self._needed_labels:
-            if context.get_perception(neeeded_perception) is None:
+            if context.get_perceptions(neeeded_perception) is None:
                 raise Exception(f"Expected perception with label '{neeeded_perception}'")
