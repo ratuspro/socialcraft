@@ -1,5 +1,3 @@
-import time
-
 import csf.practices
 from javascript import require
 

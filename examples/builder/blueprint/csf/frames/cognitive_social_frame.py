@@ -1,4 +1,4 @@
-from abc import abstractclassmethod, ABC
+from abc import abstractmethod, ABC
 
 import csf.core
 
@@ -7,11 +7,11 @@ class CognitiveSocialFrame(ABC):
     def __init__(self, perception_labels: set[str]) -> None:
         self._needed_labels = perception_labels
 
-    @abstractclassmethod
+    @abstractmethod
     def is_salient(self, context: csf.core.Context) -> bool:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_affordances(self) -> set:
         pass
 

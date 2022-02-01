@@ -17,7 +17,7 @@ class WorkTimeInterpreter(Interpreter):
 
             time = list(perceptions.get_perceptions("TIME"))[0].value
 
-            if time > 1500 and time < 12000:
+            if 1500 < time < 12000:
                 return {csf.core.Perception("WORKTIME", 1)}
 
         return {csf.core.Perception("WORKTIME", 0)}
@@ -30,7 +30,7 @@ class SleepInterpreter(Interpreter):
     def process_perceptions(self, perceptions: csf.core.Context) -> set[csf.core.Perception]:
         time = list(perceptions.get_perceptions("TIME"))[0].value
 
-        if time > self.__sleep_interval[0] and time < self.__sleep_interval[1]:
+        if self.__sleep_interval[0] < time < self.__sleep_interval[1]:
             return {csf.core.Perception("SLEEPTIME", 1)}
 
         return {csf.core.Perception("SLEEPTIME", 0)}

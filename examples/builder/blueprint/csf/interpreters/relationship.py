@@ -4,9 +4,9 @@ from .interpreter import Interpreter
 
 
 class SocialRelationshipInterpreter(Interpreter):
-    def __init__(self, friends: set[str] = {}, enemies: set[str] = {}) -> None:
-        self.__friends = friends
-        self.__enemies = enemies
+    def __init__(self, friends: set[str] = None, enemies: set[str] = None) -> None:
+        self.__friends = {} if friends is None else friends 
+        self.__enemies = {} if enemies is None else enemies 
 
     def process_perceptions(self, perceptions: csf.core.Context) -> set[csf.core.Perception]:
         social_labels = set()

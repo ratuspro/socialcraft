@@ -1,7 +1,3 @@
-import json
-import time
-from typing import Tuple
-
 from javascript import On, require
 from socialcraft_handler import Socialcraft_Handler
 
@@ -36,7 +32,7 @@ def perceive_world(bot, csf: Brain):
 
 
 @On(bot, "time")
-def handleTick(*args):
+def handleTick(_):
 
     perceive_world(bot, csf)
 

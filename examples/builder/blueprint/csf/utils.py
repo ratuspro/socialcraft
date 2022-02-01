@@ -6,7 +6,7 @@ def print_context(context: core.Context):
 
     for perception in context.get_perceptions():
         if perception.name not in ordered.keys():
-            ordered[perception.name] = list()
+            ordered[perception.name] = []
         ordered[perception.name].append(perception.value)
 
     for ps_name, ps_value in ordered.items():
