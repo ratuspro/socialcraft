@@ -1,7 +1,7 @@
-from .csf_manager import Context
+from . import core
 
 
-def print_context(context: Context):
+def print_context(context: core.Context):
     ordered = {}
 
     for perception in context.get_perceptions():
