@@ -4,6 +4,7 @@ from socialcraft_handler import Socialcraft_Handler
 from csf import Brain, Interpreter, Perception, Context, Affordance, print_context
 from csf.frames import CognitiveSocialFrame
 import json
+import time
 
 pathfinder = require("mineflayer-pathfinder")
 Vec3 = require("vec3")
@@ -69,19 +70,21 @@ class SleepInterpreter(Interpreter):
 ### Frames
 
 
-class BuilderFrame(CognitiveSocialFrame):
-    def __init__(self) -> None:
+class WorkFrame(CognitiveSocialFrame):
+    def __init__(self, workplace) -> None:
         super().__init__({"WORKTIME"})
+        self.__workplace = workplace
 
     def is_salient(self, context: Context) -> bool:
         self.assert_valid_context(context)
         perceptions = context.get_perceptions("WORKTIME")
 
+        print(list(perceptions)[0])
         if len(perceptions) == 1:
             return list(perceptions)[0].value > 0
 
     def get_affordances(self) -> set[Affordance]:
-        return {Affordance("CAN_WORK_AS_BUILDER", True, 1)}
+        return {Affordance("CAN_WORK", self.__workplace, 1)}
 
 
 class SleepFrame(CognitiveSocialFrame):
@@ -108,15 +111,21 @@ class SleepFrame(CognitiveSocialFrame):
 
 
 class GoToBed:
-    def __init__(self, bot, bed_position: Vec3) -> None:
+    def __init__(self, bot, bed_position: Vec3, needed_aff_name: str) -> None:
         self.__bot = bot
         self.__bed = bot.blockAt(bed_position)
+        self.__needed_aff_name = needed_aff_name
 
     def has_finished(self) -> bool:
         return self.__bot.isSleeping
 
-    def is_valid(self) -> bool:
-        return True
+    def is_valid(self, affs: list[Affordance]) -> bool:
+        for aff in affs:
+            print(f"{aff.name}  == {self.__needed_aff_name}")
+            if aff.name == self.__needed_aff_name:
+                print(f"got to bed not valid anymore")
+                return True
+        return False
 
     def start(self) -> None:
         if not self.__bot.isABed(self.__bed):
@@ -127,7 +136,7 @@ class GoToBed:
             self.__sleep()
             return
 
-        bot.pathfinder.goto(
+        self.__bot.pathfinder.goto(
             pathfinder.goals.GoalGetToBlock(self.__bed.position.x, self.__bed.position.y, self.__bed.position.z),
             lambda err, result: self.__sleep(),
         )
@@ -140,6 +149,44 @@ class GoToBed:
         self.__bot.sleep(self.__bed)
 
 
+class GoToWork:
+    def __init__(self, bot, workplace_position: Vec3, needed_aff_name: str) -> None:
+        self.__bot = bot
+        self.__workplace_pos = workplace_position
+        self.__needed_aff_name = needed_aff_name
+
+    def has_finished(self) -> bool:
+        return False
+
+    def is_valid(self, affs: list[Affordance]) -> bool:
+        for aff in affs:
+            print(f"{aff.name}  == {self.__needed_aff_name}")
+            if aff.name == self.__needed_aff_name:
+                print(f"got to work not valid anymore")
+                return True
+        return False
+
+    def start(self) -> None:
+
+        if self.__bot.entity.position.distanceTo(self.__workplace_pos) < 1.5:
+            self.__bot.chat("working...")
+            time.sleep(4)
+            return
+
+        self.__bot.pathfinder.goto(
+            pathfinder.goals.GoalGetToBlock(self.__workplace_pos.x, self.__workplace_pos.y, self.__workplace_pos.z),
+            lambda err, result: self.__work(),
+        )
+
+    def exit(self) -> None:
+        if self.__bot.entity.position.distanceTo(self.__workplace_pos) < 1.5:
+            self.__bot.chat("stopped working...")
+
+    def __work(self):
+        self.__bot.chat("working...")
+        time.sleep(4)
+
+
 # Init Socialcraft Handler
 handler = Socialcraft_Handler()
 handler.connect()
@@ -149,13 +196,21 @@ csf = Brain()
 csf.add_interpreter(WorkTimeInterpreter())
 csf.add_interpreter(SocialRelationshipInterpreter())
 csf.add_interpreter(SleepInterpreter(16000, 23999))
-csf.add_frame(BuilderFrame())
 
 if handler.has_init_env_variable("bed"):
-    print("found bed")
     bed_json = json.loads(handler.get_init_env_variable("bed"))
     bed = Vec3(bed_json["x"], bed_json["y"], bed_json["z"])
     csf.add_frame(SleepFrame(bed))
+
+if handler.has_init_env_variable("rel"):
+    rel_json = json.loads(handler.get_init_env_variable("rel"))
+    csf.add_interpreter(SocialRelationshipInterpreter(friends=rel_json["friends"]))
+
+if handler.has_init_env_variable("workplace"):
+    workplace_json = json.loads(handler.get_init_env_variable("workplace"))
+    workplace = Vec3(workplace_json["x"], workplace_json["y"], workplace_json["z"])
+    print(workplace)
+    csf.add_frame(WorkFrame(workplace))
 
 # Start Bot
 bot = handler.bot
@@ -173,14 +228,15 @@ def handleTick(*args):
 
     csf.update_saliences()
 
-    print("Affordances: ")
     possibleActions = []
 
     if bot.onGoingPractice == None:
         for aff in csf.get_affordances():
             if aff.name == "CAN_SLEEP":
-                print(aff.value)
-                possibleActions.append((GoToBed(bot, aff.value), aff.value))
+                possibleActions.append((GoToBed(bot, aff.value, aff.name), aff.value))
+
+            if aff.name == "CAN_WORK":
+                possibleActions.append((GoToWork(bot, aff.value, aff.name), aff.value))
 
         if len(possibleActions) > 0:
             possibleActions[0][0].start()
