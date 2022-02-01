@@ -2,6 +2,9 @@ from abc import abstractmethod, ABC
 
 
 class Practice(ABC):
+    def __init__(self, creator) -> None:
+        self.__creator = creator
+
     @abstractmethod
     def start(self) -> None:
         pass
@@ -14,6 +17,5 @@ class Practice(ABC):
     def is_finished(self) -> bool:
         pass
 
-    @abstractmethod
-    def is_valid(self) -> bool:
-        pass
+    def is_valid(self, context) -> bool:
+        return self.__creator.is_salient(context)

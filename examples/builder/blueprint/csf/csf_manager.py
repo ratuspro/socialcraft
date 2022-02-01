@@ -53,4 +53,4 @@ class Brain:
         for sal_frame in self.__salient_frames:
             affordances = affordances.union(sal_frame.get_affordances())
 
-        return affordances
+        return list(affordances)

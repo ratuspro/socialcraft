@@ -5,7 +5,7 @@ class Context:
     def __init__(self) -> None:
         self.__perceptions = set()
 
-    def get_perceptions(self, name: str = None) -> set[Perception]:
+    def get_perceptions(self, name: str = None) -> list[Perception]:
 
         if name is None:
             return set(self.__perceptions)
@@ -15,7 +15,7 @@ class Context:
             if perception.name == name:
                 filtered_perceptions.add(perception)
 
-        return filtered_perceptions
+        return list(filtered_perceptions)
 
     def add_perception(self, perception: Perception) -> None:
         self.__perceptions.add(perception)
