@@ -4,7 +4,7 @@ from javascript import On, require
 from socialcraft_handler import Socialcraft_Handler
 
 from csf import Brain, print_context
-from csf.frames import WorkFrame, HumanFrame
+from csf.frames import WorkFrame, HumanFrame, DrinkerFrame
 from csf.interpreters import SocialRelationshipInterpreter, WorkTimeInterpreter, SleepInterpreter
 from csf.core import Perception
 
@@ -33,6 +33,11 @@ if handler.has_init_env_variable("bed"):
     bed = Vec3(bed_json["x"], bed_json["y"], bed_json["z"])
     csf.add_frame(HumanFrame(bot, bed))
 
+if handler.has_init_env_variable("bar"):
+    bar_json = json.loads(handler.get_init_env_variable("bar"))
+    bar = Vec3(bar_json["x"], bar_json["y"], bar_json["z"])
+    csf.add_frame(DrinkerFrame(bot, bar))
+
 
 def perceive_world(bot, csf: Brain):
     csf.add_perception_to_buffer(Perception("WEEKDAY", bot.time.day % 7))
@@ -53,9 +58,6 @@ def handleTick(_):
     csf.update_saliences()
     affordances = csf.get_affordances()
 
-    print(bot.ongoing_practice)
-
-    print(affordances)
     if bot.ongoing_practice is not None:
         if not bot.ongoing_practice.is_valid(csf.get_last_context()) or bot.ongoing_practice.is_finished():
             bot.ongoing_practice.exit()

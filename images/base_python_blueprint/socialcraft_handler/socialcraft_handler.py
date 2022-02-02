@@ -110,6 +110,7 @@ class Socialcraft_Handler:
         self.__logger.info("Setting up mineflayer-pathfinder...")
         mcData = require("minecraft-data")(self.__bot.version)
         movements = pathfinder.Movements(self.__bot, mcData)
+        movements.allowSprinting = False
         self.__bot.pathfinder.setMovements(movements)
 
         self.__logger.info("Waiting for pathfinder...")

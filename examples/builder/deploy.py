@@ -6,7 +6,11 @@ import random
 if __name__ == "__main__":
 
     print("Starting Agent Manager...")
-    manager = AgentManager(minecraft_host="10.68.166.113", minecraft_port=25565, minecraft_version="1.17")
+    manager = AgentManager(
+        minecraft_host="10.68.166.113",
+        minecraft_port=25565,
+        minecraft_version="1.17",
+    )
     print("Starting Agent Manager!")
 
     print("Creting Agent Blueprint...")
@@ -39,38 +43,61 @@ if __name__ == "__main__":
         '{"x": 29, "y": 3, "z": 52}',
     ]
 
+    bar = '{"x": 23, "y": 4, "z": 21}'
+    bar_exclusive_area = '{"x": 23, "y": 8, "z": 22}'
+
     agent1 = manager.create_agent(
         f"Agent1",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent2"]}', "bed": beds[0], "workplace": workplaces[0]},
+        custom_envs={"rel": '{"friends": ["Agent2"]}', "bed": beds[0], "workplace": workplaces[0], "bar": bar},
     )
     agent1.deploy()
 
     agent2 = manager.create_agent(
         f"Agent2",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent1", "Agent4", "Agent5"]}', "bed": beds[1], "workplace": workplaces[1]},
+        custom_envs={
+            "rel": '{"friends": ["Agent1", "Agent4", "Agent5"]}',
+            "bed": beds[1],
+            "workplace": workplaces[1],
+            "bar": bar_exclusive_area,
+        },
     )
     agent2.deploy()
 
     agent3 = manager.create_agent(
         f"Agent3",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent4", "Agent5"]}', "bed": beds[2], "workplace": workplaces[2]},
+        custom_envs={
+            "rel": '{"friends": ["Agent4", "Agent5"]}',
+            "bed": beds[2],
+            "workplace": workplaces[2],
+            "bar": bar,
+        },
     )
     agent3.deploy()
 
     agent4 = manager.create_agent(
         f"Agent4",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent3", "Agent5"]}', "bed": beds[3], "workplace": workplaces[3]},
+        custom_envs={
+            "rel": '{"friends": ["Agent3", "Agent5"]}',
+            "bed": beds[3],
+            "workplace": workplaces[3],
+            "bar": bar,
+        },
     )
     agent4.deploy()
 
     agent5 = manager.create_agent(
         f"Agent5",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent3", "Agent4"]}', "bed": beds[4], "workplace": workplaces[4]},
+        custom_envs={
+            "rel": '{"friends": ["Agent3", "Agent4"]}',
+            "bed": beds[4],
+            "workplace": workplaces[4],
+            "bar": bar_exclusive_area,
+        },
     )
     agent5.deploy()
 
