@@ -12,7 +12,7 @@ class CognitiveSocialFrame(ABC):
         pass
 
     @abstractmethod
-    def get_affordances(self) -> set:
+    def get_affordances(self) -> set[csf.core.Affordance]:
         pass
 
     def assert_valid_context(self, context) -> None:

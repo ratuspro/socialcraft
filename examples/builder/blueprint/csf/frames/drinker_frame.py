@@ -16,10 +16,10 @@ class DrinkerFrame(CognitiveSocialFrame):
 
     def is_salient(self, context: csf.core.Context) -> bool:
         perceptions = context.get_perceptions("PARTYTIME")
-        return len(perceptions) == 1 and perceptions[0].value == 0
+        return len(perceptions) == 1 and perceptions[0].value == 1
 
-    def get_affordances(self) -> set:
-        return {GoToBar(self, self.__bot, self.__bar)}
+    def get_affordances(self) -> set[csf.core.Affordance]:
+        return {csf.core.Affordance(GoToBar(self, self.__bot, self.__bar), 0.5)}
 
 
 class GoToBar(csf.practices.Practice):
@@ -30,6 +30,9 @@ class GoToBar(csf.practices.Practice):
 
     def start(self) -> None:
         if self.is_finished():
+            return
+
+        if self.__bot.entity.position.distanceTo(self.__bar) < 1.5:
             return
 
         self.__bot.pathfinder.goto(

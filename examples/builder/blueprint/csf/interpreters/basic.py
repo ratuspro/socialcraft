@@ -55,7 +55,7 @@ class PartyTimeInterpreter(Interpreter):
         if not self.__workdays.isdisjoint(perceptions.get_perceptions("WEEKDAY")):
             time = list(perceptions.get_perceptions("TIME"))[0].value
 
-            if 12100 < time < 16500:
+            if 12100 < time < 19500:
                 return {csf.core.Perception("PARTYTIME", 1)}
 
         elif not self.__offdays.isdisjoint(perceptions.get_perceptions("WEEKDAY")):

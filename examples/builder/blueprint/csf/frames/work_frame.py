@@ -19,7 +19,7 @@ class WorkFrame(CognitiveSocialFrame):
         return len(perceptions) == 1 and perceptions[0].value > 0
 
     def get_affordances(self) -> set:
-        return {GoToWork(self, self.__bot, self.__workplace)}
+        return {csf.core.Affordance(GoToWork(self, self.__bot, self.__workplace), 1.1)}
 
 
 class GoToWork(csf.practices.Practice):

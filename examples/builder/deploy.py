@@ -49,7 +49,7 @@ if __name__ == "__main__":
     agent1 = manager.create_agent(
         f"Agent1",
         blueprint=agent_blueprint,
-        custom_envs={"rel": '{"friends": ["Agent2"]}', "bed": beds[0], "workplace": workplaces[0], "bar": bar},
+        custom_envs={"friends": '["Agent2"]', "bed": beds[0], "workplace": workplaces[0], "bar": bar},
     )
     agent1.deploy()
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         f"Agent2",
         blueprint=agent_blueprint,
         custom_envs={
-            "rel": '{"friends": ["Agent1", "Agent4", "Agent5"]}',
+            "friends": '["Agent1", "Agent4", "Agent5"]',
             "bed": beds[1],
             "workplace": workplaces[1],
             "bar": bar_exclusive_area,
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         f"Agent3",
         blueprint=agent_blueprint,
         custom_envs={
-            "rel": '{"friends": ["Agent4", "Agent5"]}',
+            "friends": '["Agent4", "Agent5"]',
             "bed": beds[2],
             "workplace": workplaces[2],
             "bar": bar,
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         f"Agent4",
         blueprint=agent_blueprint,
         custom_envs={
-            "rel": '{"friends": ["Agent3", "Agent5"]}',
+            "friends": '["Agent3", "Agent5"]',
             "bed": beds[3],
             "workplace": workplaces[3],
             "bar": bar,
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         f"Agent5",
         blueprint=agent_blueprint,
         custom_envs={
-            "rel": '{"friends": ["Agent3", "Agent4"]}',
+            "friends": '["Agent3", "Agent4"]',
             "bed": beds[4],
             "workplace": workplaces[4],
             "bar": bar_exclusive_area,

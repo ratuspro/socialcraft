@@ -20,7 +20,7 @@ class HumanFrame(CognitiveSocialFrame):
         return len(perceptions) == 1 and perceptions[0].value > 0
 
     def get_affordances(self) -> set:
-        return {Sleep(self, self.__bot, self.__bed)}
+        return {csf.core.Affordance(Sleep(self, self.__bot, self.__bed), 1.0)}
 
 
 class Sleep(csf.practices.Practice):

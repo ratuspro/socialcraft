@@ -6,7 +6,7 @@ from socialcraft_handler import Socialcraft_Handler
 from csf import Brain, print_context
 from csf.frames import WorkFrame, HumanFrame, DrinkerFrame
 from csf.interpreters import SocialRelationshipInterpreter, WorkTimeInterpreter, SleepInterpreter, PartyTimeInterpreter
-from csf.core import Perception
+from csf.core import Perception, Affordance
 
 Vec3 = require("vec3")
 
@@ -17,7 +17,14 @@ handler.connect()
 # Init CSF Brain
 csf = Brain()
 csf.add_interpreter(WorkTimeInterpreter())
-csf.add_interpreter(SocialRelationshipInterpreter())
+
+friends = []
+if handler.has_init_env_variable("friends"):
+    friends.extend(json.loads(handler.get_init_env_variable("friends")))
+print(friends)
+
+
+csf.add_interpreter(SocialRelationshipInterpreter(friends))
 csf.add_interpreter(SleepInterpreter(16000, 23999))
 csf.add_interpreter(PartyTimeInterpreter())
 # Start Bot
@@ -47,7 +54,7 @@ def perceive_world(bot, csf: Brain):
         csf.add_perception_to_buffer(Perception("PLAYER", entity))
 
 
-bot.ongoing_practice = None
+bot.active_affordance = None
 
 
 bot.last_update = bot.time.time
@@ -70,31 +77,39 @@ def handleTick(_):
     print_context(csf.get_last_context())
 
     affordances = csf.get_affordances()
+    affordances.sort(key=lambda x: x.salience, reverse=True)
 
-    if bot.ongoing_practice is not None:
+    if bot.active_affordance is not None:
         print("## Previous Practice: ")
-        print(bot.ongoing_practice)
+        print(bot.active_affordance)
 
-        valid_practice = bot.ongoing_practice.is_valid(csf.get_last_context())
-        finished_practice = bot.ongoing_practice.is_finished()
+        valid_practice = bot.active_affordance.object.is_valid(csf.get_last_context())
+        finished_practice = bot.active_affordance.object.is_finished()
+        another_practice_more_salient = (
+            len(affordances) > 0 and affordances[0].salience > bot.active_affordance.salience
+        )
 
-        print("   = " + "Practice still valid" if valid_practice else "Practice not valid")
-        print("   = " + "Practice finished" if finished_practice else "Practice not yet finished")
+        print("   = " + ("Practice still valid" if valid_practice else "Practice not valid"))
+        print("   = " + ("Practice finished" if finished_practice else "Practice not yet finished"))
+        print(
+            "   = "
+            + ("Not the most salient frame" if another_practice_more_salient else "Still is the most salient frame")
+        )
 
-        if not valid_practice or finished_practice:
+        if not valid_practice or finished_practice or another_practice_more_salient:
             print("On going practice not adequate anymore. Deleting practice...")
-            print(bot.ongoing_practice)
+            print(bot.active_affordance.object)
 
-            bot.ongoing_practice.exit()
-            bot.ongoing_practice = None
+            bot.active_affordance.object.exit()
+            bot.active_affordance = None
 
-    if bot.ongoing_practice is None and len(affordances) > 0:
+    if bot.active_affordance is None and len(affordances) > 0:
         print("## New Practices Available!")
         for new_practice in affordances:
             print("    = " + str(new_practice))
 
-        bot.ongoing_practice = random.choice(affordances)
+        bot.active_affordance = affordances[0]
 
         print("### Selected practice:")
-        print(bot.ongoing_practice)
-        bot.ongoing_practice.start()
+        print(bot.active_affordance)
+        bot.active_affordance.object.start()

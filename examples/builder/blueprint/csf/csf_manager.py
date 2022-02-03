@@ -48,7 +48,7 @@ class Brain:
 
         self.__perception_buffer.clear()
 
-    def get_affordances(self) -> list[practices.Practice]:
+    def get_affordances(self) -> list[core.Affordance]:
         affordances = set()
         for sal_frame in self.__salient_frames:
             affordances = affordances.union(sal_frame.get_affordances())
