@@ -37,7 +37,7 @@ class GoToBar(csf.practices.Practice):
 
         self.__bot.pathfinder.goto(
             pathfinder.goals.GoalNear(self.__bar.x, self.__bar.y, self.__bar.z, 0.5),
-            lambda err, result: print(str(err) + str(result)),
+            lambda err, result: print(err) if err is not None else print(result),
         )
 
     def exit(self) -> None:

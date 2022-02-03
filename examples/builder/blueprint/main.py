@@ -4,7 +4,7 @@ from javascript import On, require
 from socialcraft_handler import Socialcraft_Handler
 
 from csf import Brain, print_context
-from csf.frames import WorkFrame, HumanFrame, DrinkerFrame
+from csf.frames import WorkFrame, HumanFrame, DrinkerFrame, BardFrame, TalkerFrame
 from csf.interpreters import SocialRelationshipInterpreter, WorkTimeInterpreter, SleepInterpreter, PartyTimeInterpreter
 from csf.core import Perception, Affordance
 
@@ -21,7 +21,6 @@ csf.add_interpreter(WorkTimeInterpreter())
 friends = []
 if handler.has_init_env_variable("friends"):
     friends.extend(json.loads(handler.get_init_env_variable("friends")))
-print(friends)
 
 
 csf.add_interpreter(SocialRelationshipInterpreter(friends))
@@ -29,11 +28,12 @@ csf.add_interpreter(SleepInterpreter(16000, 23999))
 csf.add_interpreter(PartyTimeInterpreter())
 # Start Bot
 bot = handler.bot
-
 if handler.has_init_env_variable("workplace"):
     position_json = json.loads(handler.get_init_env_variable("workplace"))
     workplace = Vec3(position_json["x"], position_json["y"], position_json["z"])
     csf.add_frame(WorkFrame(bot, workplace))
+else:
+    csf.add_frame(BardFrame(bot))
 
 if handler.has_init_env_variable("bed"):
     bed_json = json.loads(handler.get_init_env_variable("bed"))
@@ -51,7 +51,8 @@ def perceive_world(bot, csf: Brain):
     csf.add_perception_to_buffer(Perception("TIME", bot.time.timeOfDay))
 
     for entity in bot.entities:
-        csf.add_perception_to_buffer(Perception("PLAYER", entity))
+        if int(entity) != int(bot.entity.id):
+            csf.add_perception_to_buffer(Perception("PLAYER", entity))
 
 
 bot.active_affordance = None

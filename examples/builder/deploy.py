@@ -33,6 +33,7 @@ if __name__ == "__main__":
         '{"x": 29, "y": 4, "z": 38}',
         '{"x": 31, "y": 4, "z": 41}',
         '{"x": 31, "y": 4, "z": 38}',
+        '{"x": 36, "y": 4, "z": 45}',
     ]
 
     workplaces = [
@@ -53,17 +54,12 @@ if __name__ == "__main__":
     )
     agent1.deploy()
 
-    agent2 = manager.create_agent(
+    """ agent2 = manager.create_agent(
         f"Agent2",
         blueprint=agent_blueprint,
-        custom_envs={
-            "friends": '["Agent1", "Agent4", "Agent5"]',
-            "bed": beds[1],
-            "workplace": workplaces[1],
-            "bar": bar_exclusive_area,
-        },
+        custom_envs={"friends": '["Agent1", "Agent4", "Agent5"]', "bed": beds[1], "workplace": workplaces[1]},
     )
-    agent2.deploy()
+    agent2.deploy() """
 
     agent3 = manager.create_agent(
         f"Agent3",
@@ -100,5 +96,12 @@ if __name__ == "__main__":
         },
     )
     agent5.deploy()
+
+    bard = manager.create_agent(
+        f"Bard",
+        blueprint=agent_blueprint,
+        custom_envs={"bed": beds[5]},
+    )
+    bard.deploy()
 
     print("Agents deployed!")

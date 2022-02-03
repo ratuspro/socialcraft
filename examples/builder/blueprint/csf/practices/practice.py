@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 
 class Practice(ABC):
     def __init__(self, creator) -> None:
-        self.__creator = creator
+        self._creator = creator
 
     @abstractmethod
     def start(self) -> None:
@@ -18,4 +18,4 @@ class Practice(ABC):
         pass
 
     def is_valid(self, context) -> bool:
-        return self.__creator.is_salient(context)
+        return self._creator.is_salient(context)
