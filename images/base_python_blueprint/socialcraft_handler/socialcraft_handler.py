@@ -111,6 +111,7 @@ class Socialcraft_Handler:
         mcData = require("minecraft-data")(self.__bot.version)
         movements = pathfinder.Movements(self.__bot, mcData)
         movements.allowSprinting = False
+        movements.canDig = False
         self.__bot.pathfinder.setMovements(movements)
 
         self.__logger.info("Waiting for pathfinder...")
