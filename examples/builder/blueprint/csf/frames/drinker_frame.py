@@ -10,12 +10,12 @@ pathfinder = require("mineflayer-pathfinder")
 
 class DrinkerFrame(CognitiveSocialFrame):
     def __init__(self, bot, bar) -> None:
-        super().__init__({"WORKTIME"})
+        super().__init__({"PARTYTIME"})
         self.__bot = bot
         self.__bar = bar
 
     def is_salient(self, context: csf.core.Context) -> bool:
-        perceptions = context.get_perceptions("WORKTIME")
+        perceptions = context.get_perceptions("PARTYTIME")
         return len(perceptions) == 1 and perceptions[0].value == 0
 
     def get_affordances(self) -> set:

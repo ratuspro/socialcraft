@@ -32,6 +32,9 @@ class GoToWork(csf.practices.Practice):
         if self.is_finished():
             return
 
+        if self.__bot.entity.position.distanceTo(self.__workplace) < 1.5:
+            return
+
         self.__bot.pathfinder.goto(
             pathfinder.goals.GoalNear(self.__workplace.x, self.__workplace.y, self.__workplace.z, 0.5),
             lambda err, result: print(result),
@@ -41,4 +44,4 @@ class GoToWork(csf.practices.Practice):
         pass
 
     def is_finished(self) -> bool:
-        return self.__bot.entity.position.distanceTo(self.__workplace) < 1.5
+        return False
