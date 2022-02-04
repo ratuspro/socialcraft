@@ -34,8 +34,6 @@ class TalkAbout(csf.practices.Practice):
         self.__finished = False
 
     def start(self) -> None:
-        print("Starting practice...")
-        print(f"player: {self.__player.username}")
         if self.is_finished():
             return
 
@@ -48,9 +46,8 @@ class TalkAbout(csf.practices.Practice):
             self.__talk_about()
             return
 
-        print(f"{self.__bot.pathfinder} moving from")
-        print(f"{self.__bot.entity.position}")
-        print(f"towards {self.__player.position}.")
+        print(self.__bot.pathfinder)
+        print(self.__player.position)
         self.__bot.pathfinder.setGoal(
             pathfinder.goals.GoalNear(self.__player.position.x, self.__player.position.y, self.__player.position.z, 3)
         )
@@ -59,6 +56,22 @@ class TalkAbout(csf.practices.Practice):
         def handle_arrival(arg1, arg2):
             off(self.__bot, "goal_reached", handle_arrival)
             self.__talk_about()
+
+        @On(self.__bot, "path_update")
+        def handle_path_update(arg1, arg2):
+            print("path_update")
+
+        @On(self.__bot, "goal_updated")
+        def handle_goal_updated(arg1, arg2, arg3):
+            print("goal_updated")
+
+        @On(self.__bot, "path_reset")
+        def handle_path_reset(arg1, arg2):
+            print("path_reset")
+
+        @On(self.__bot, "path_stop")
+        def handle_path_stop(arg1, arg2):
+            print("path_stop")
 
     def __talk_about(self):
         self.__bot.lookAt(self.__player.position)
