@@ -20,3 +20,6 @@ class SocialRelationshipInterpreter(Interpreter):
                 social_labels.add(csf.core.Perception("STRANGER", perception.value))
 
         return social_labels
+
+    def __str__(self) -> str:
+        return f"<SocialRelationshipInterpreter>"

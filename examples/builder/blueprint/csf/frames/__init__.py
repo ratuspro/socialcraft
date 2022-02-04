@@ -3,4 +3,3 @@ from .human_frame import HumanFrame
 from .work_frame import WorkFrame
 from .drinker_frame import DrinkerFrame
 from .bard_frame import BardFrame
-from .talker_frame import TalkerFrame

@@ -22,6 +22,9 @@ class WorkTimeInterpreter(Interpreter):
 
         return {csf.core.Perception("WORKTIME", 0)}
 
+    def __str__(self) -> str:
+        return f"<WorkTimeInterpreter>"
+
 
 class SleepInterpreter(Interpreter):
     def __init__(self, min_hour: int, max_hour: int) -> None:
@@ -34,6 +37,9 @@ class SleepInterpreter(Interpreter):
             return {csf.core.Perception("SLEEPTIME", 1)}
 
         return {csf.core.Perception("SLEEPTIME", 0)}
+
+    def __str__(self) -> str:
+        return f"<SleepInterpreter>"
 
 
 class PartyTimeInterpreter(Interpreter):
@@ -65,3 +71,6 @@ class PartyTimeInterpreter(Interpreter):
                 return {csf.core.Perception("PARTYTIME", 1)}
 
         return {csf.core.Perception("PARTYTIME", 0)}
+
+    def __str__(self) -> str:
+        return f"<PartyTimeInterpreter>"
