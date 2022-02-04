@@ -20,7 +20,7 @@ class BardFrame(CognitiveSocialFrame):
         perceptions = context.get_perceptions("PLAYER")
         for perception in perceptions:
             self.__players.append(perception.value)
-        return len(perceptions) > 1
+        return len(perceptions) > 0
 
     def get_affordances(self) -> set:
         return {csf.core.Affordance(TalkAbout(self, self.__bot, random.choice(self.__players)), 0.9)}
@@ -46,14 +46,10 @@ class TalkAbout(csf.practices.Practice):
             self.__talk_about()
             return
 
-        print(self.__bot.pathfinder)
-        print(self.__player.position)
-
         goal = pathfinder.goals.GoalNear(
             self.__player.position.x, self.__player.position.y, self.__player.position.z, 3
         )
 
-        print(goal)
         bot_pathfinder = self.__bot.pathfinder
         bot_pathfinder.setGoal(goal)
 
@@ -84,6 +80,7 @@ class TalkAbout(csf.practices.Practice):
         self.__finished = True
 
     def exit(self) -> None:
+
         pass
 
     def is_finished(self) -> bool:
