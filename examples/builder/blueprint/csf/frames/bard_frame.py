@@ -1,5 +1,6 @@
+import logging
 import csf.practices
-from javascript import require
+from javascript import require, off, On
 import random
 
 import csf.core
@@ -33,6 +34,8 @@ class TalkAbout(csf.practices.Practice):
         self.__finished = False
 
     def start(self) -> None:
+        print("Starting practice...")
+        print(f"player: {self.__player.username}")
         if self.is_finished():
             return
 
@@ -41,21 +44,21 @@ class TalkAbout(csf.practices.Practice):
             return
 
         if self.__bot.entity.position.distanceTo(self.__player.position) < 3:
+            print("Already close to the target.")
             self.__talk_about()
             return
 
-        self.__bot.pathfinder.goto(
-            pathfinder.goals.GoalNear(self.__player.position.x, self.__player.position.y, self.__player.position.z, 3),
-            lambda err, result: self.handle_arrival(err, result),
+        print(f"{self.__bot.pathfinder} moving from")
+        print(f"{self.__bot.entity.position}")
+        print(f"towards {self.__player.position}.")
+        self.__bot.pathfinder.setGoal(
+            pathfinder.goals.GoalNear(self.__player.position.x, self.__player.position.y, self.__player.position.z, 3)
         )
 
-    def handle_arrival(self, err, result):
-        if err is not None:
-            print(err)
-            self.__finished = True
-            return
-
-        self.__talk_about()
+        @On(self.__bot, "goal_reached")
+        def handle_arrival(arg1, arg2):
+            off(self.__bot, "goal_reached", handle_arrival)
+            self.__talk_about()
 
     def __talk_about(self):
         self.__bot.lookAt(self.__player.position)

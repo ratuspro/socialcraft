@@ -132,8 +132,8 @@ def handleTick(_):
         logger.debug(f"Deploying new affordance:")
         logger.debug(f"{affordances[0]}")
         bot.active_affordance = affordances[0]
-        bot.active_affordance.object.start()
         logger.debug(f"Affordance deployed!")
+        bot.active_affordance.object.start()
 
     time_spent = datetime.now() - start_time
     logger.info(
