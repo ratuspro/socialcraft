@@ -48,9 +48,14 @@ class TalkAbout(csf.practices.Practice):
 
         print(self.__bot.pathfinder)
         print(self.__player.position)
-        self.__bot.pathfinder.setGoal(
-            pathfinder.goals.GoalNear(self.__player.position.x, self.__player.position.y, self.__player.position.z, 3)
+
+        goal = pathfinder.goals.GoalNear(
+            self.__player.position.x, self.__player.position.y, self.__player.position.z, 3
         )
+
+        print(goal)
+        bot_pathfinder = self.__bot.pathfinder
+        bot_pathfinder.setGoal(goal)
 
         @On(self.__bot, "goal_reached")
         def handle_arrival(arg1, arg2):

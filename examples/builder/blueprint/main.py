@@ -62,9 +62,13 @@ def perceive_world(bot, csf: Brain):
     csf.add_perception_to_buffer(Perception("WEEKDAY", bot.time.day % 7))
     csf.add_perception_to_buffer(Perception("TIME", bot.time.timeOfDay))
 
+    bot_position = bot.entity.position
+
     for entity in bot.entities:
         if int(entity) != int(bot.entity.id):
-            csf.add_perception_to_buffer(Perception("PLAYER", entity))
+            other_position = bot.entities[entity].position
+            if other_position.distanceTo(bot_position) < 10:
+                csf.add_perception_to_buffer(Perception("PLAYER", entity))
 
 
 bot.active_affordance = None
