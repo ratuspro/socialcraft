@@ -21,7 +21,7 @@ class HumanFrame(CognitiveSocialFrame):
 
     def get_affordances(self) -> set:
         return {
-            csf.core.Affordance(Sleep(self, self.__bot, self.__bed), 0.2),
+            csf.core.Affordance(Sleep(self, self.__bot, self.__bed), 1.0),
             csf.core.Affordance(WanderAround(self, self.__bot), 0.4),
         }
 
