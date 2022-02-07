@@ -9,13 +9,11 @@ from . import frames
 class Brain:
     __frames: set[frames.CognitiveSocialFrame]
     __perception_buffer: set[core.Perception]
-    __salient_frames: set[frames.CognitiveSocialFrame]
     __interpreters: set[interpreters.Interpreter]
 
     def __init__(self) -> None:
         self.__frames = set()
         self.__perception_buffer = set()
-        self.__salient_frames = set()
         self.__interpreters = set()
         self.__lastContext = None
 
@@ -43,12 +41,12 @@ class Brain:
     def get_last_context(self) -> core.Context:
         return self.__lastContext
 
-    def update_saliences(self) -> None:
-        self.__logger.debug(f"Updating saliences...")
-        self.__salient_frames.clear()
+    def create_context(self) -> None:
 
         self.__logger.debug(f"Creating new context...")
+
         context = core.Context()
+
         if len(self.__perception_buffer) == 0:
             self.__logger.debug(f"No perceptions on buffer.")
         else:
@@ -68,23 +66,14 @@ class Brain:
                     self.__logger.debug(f"Added interpreted perception {new_perception}")
 
             context.add_perceptions(new_perceptions)
-
-        self.__lastContext = context
-
-        self.__logger.debug(f"Update frames' saliences...")
-        for frame in self.__frames:
-            if frame.is_salient(context):
-                self.__logger.debug(f"Frame {frame} is salient.")
-                self.__salient_frames.add(frame)
-            else:
-                self.__logger.debug(f"Frame {frame} is not salient.")
-
         self.__perception_buffer.clear()
         self.__logger.debug(f"Cleared perception's buffer.")
 
+        self.__lastContext = context
+        return context
+
     def get_affordances(self) -> list[core.Affordance]:
         affordances = set()
-        for sal_frame in self.__salient_frames:
-            affordances = affordances.union(sal_frame.get_affordances())
-
+        for frame in self.__frames:
+            affordances = affordances.union(frame.get_affordances(self.__lastContext))
         return list(affordances)

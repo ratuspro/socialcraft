@@ -37,7 +37,7 @@ if handler.has_init_env_variable("friends"):
 
 
 csf.add_interpreter(SocialRelationshipInterpreter(friends))
-csf.add_interpreter(SleepInterpreter(16000, 23999))
+csf.add_interpreter(SleepInterpreter(16000, 23300))
 csf.add_interpreter(PartyTimeInterpreter())
 # Start Bot
 bot = handler.bot
@@ -64,7 +64,7 @@ bot.last_update = bot.time.time
 
 
 @AsyncTask(start=True)
-def async_perceive_work(task):
+def async_perceive_world(task):
     while not task.stopping:
 
         logger.info(f"Start Perceiving World at {bot.time.time}")
@@ -81,11 +81,11 @@ def async_perceive_work(task):
                     csf.add_perception_to_buffer(Perception("PLAYER", entity))
         logger.debug(f"World perceived!")
 
-        logger.debug(f"Updating saliences...")
-        csf.update_saliences()
-        logger.debug(f"Saliences updated...")
+        logger.debug(f"Creating new context...")
+        csf.create_context()
+        logger.debug(f"New context created...")
 
-        logger.debug(f"Determine Best Affordance...")
+        logger.debug(f"Deploying new affordances")
         available_affordances = csf.get_affordances()
         available_affordances.sort(key=lambda x: x.salience, reverse=True)
 
@@ -96,24 +96,25 @@ def async_perceive_work(task):
             for i in range(0, len(available_affordances)):
                 logger.debug(f"[{i}] {available_affordances[i]}")
 
+        logger.debug(f"New affordances deployed")
+
         if bot.active_affordance is not None:
             logger.debug(f"Previous Affordance: ")
             logger.debug(f"{bot.active_affordance}")
 
-            valid_practice = bot.active_affordance.object.is_valid(csf.get_last_context())
-            finished_practice = bot.active_affordance.object.is_finished()
+            is_valid = len(list(filter(lambda aff: aff == bot.active_affordance, available_affordances))) > 0
+            is_finished = bot.active_affordance.object.is_finished()
             another_practice_more_salient = (
                 len(available_affordances) > 0 and available_affordances[0].salience > bot.active_affordance.salience
             )
 
-            logger.debug(f"[{ 'X' if valid_practice else ' '}] Still Valid.")
-            logger.debug(f"[{ 'X' if not finished_practice else ' '}] Ongoing.")
+            logger.debug(f"[{ 'X' if is_valid else ' '}] Valid.")
+            logger.debug(f"[{ 'X' if not is_finished else ' '}] Ongoing.")
             logger.debug(f"[{ 'X' if not another_practice_more_salient else ' '}] Highest salience.")
 
-            if not valid_practice or finished_practice or another_practice_more_salient:
+            if is_finished or another_practice_more_salient or not is_valid:
                 logger.debug("Stopping previous affordance...")
                 logger.debug(bot.active_affordance.object)
-
                 bot.active_affordance.object.exit()
                 bot.active_affordance = None
                 logger.debug("Previous affordance stopped.")
@@ -127,13 +128,12 @@ def async_perceive_work(task):
             logger.debug(f"{available_affordances[0]}")
             bot.active_affordance = available_affordances[0]
             logger.debug(f"Affordance deployed!")
-            bot.active_affordance.object.start()
 
         time_spent = datetime.now() - start_time
         logger.info(
             f"Affordances updated after {(time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0} miliseconds"
         )
-        task.wait(2)
+        task.wait(5)
 
 
 @On(bot, "time")
@@ -147,11 +147,13 @@ def handleTick(_):
     logger.info(f"Start new update at {bot.time.time}")
     start_time = datetime.now()
 
-    if bot.active_affordance.object.state == Practice.State.CREATED:
-        bot.active_affordance.object.start()
+    if bot.active_affordance is not None:
 
-    if bot.active_affordance.object.state == Practice.State.RUNNING:
-        bot.active_affordance.object.update()
+        if bot.active_affordance.object.state == Practice.State.CREATED:
+            bot.active_affordance.object.start()
+
+        if bot.active_affordance.object.state == Practice.State.RUNNING:
+            bot.active_affordance.object.update()
 
     time_spent = datetime.now() - start_time
     logger.info(

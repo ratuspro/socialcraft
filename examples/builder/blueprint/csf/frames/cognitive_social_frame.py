@@ -8,11 +8,7 @@ class CognitiveSocialFrame(ABC):
         self._needed_labels = perception_labels
 
     @abstractmethod
-    def is_salient(self, context: csf.core.Context) -> bool:
-        pass
-
-    @abstractmethod
-    def get_affordances(self) -> set[csf.core.Affordance]:
+    def get_affordances(self, context: csf.core.Context) -> set[csf.core.Affordance]:
         pass
 
     def assert_valid_context(self, context) -> None:

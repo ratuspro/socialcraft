@@ -16,13 +16,10 @@ class BardFrame(CognitiveSocialFrame):
         self.__bot = bot
         self.__players = []
 
-    def is_salient(self, context: csf.core.Context) -> bool:
+    def get_affordances(self, context: csf.core.Context) -> set[csf.core.Affordance]:
         perceptions = context.get_perceptions("PLAYER")
         for perception in perceptions:
             self.__players.append(perception.value)
-        return len(perceptions) > 0
-
-    def get_affordances(self) -> set:
         return {csf.core.Affordance(TalkAbout(self, self.__bot, random.choice(self.__players)), 0.9)}
 
 
@@ -30,10 +27,12 @@ class TalkAbout(csf.practices.Practice):
     def __init__(self, creator, bot, target) -> None:
         super().__init__(creator)
         self.__bot = bot
+        self.__target = target
         self.__player = bot.entities[target]
         self.__finished = False
 
     def start(self) -> None:
+        self._state = csf.practices.Practice.State.RUNNING
         if self.is_finished():
             return
 
@@ -88,3 +87,11 @@ class TalkAbout(csf.practices.Practice):
             return True
 
         return self.__finished
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, TalkAbout):
+            return self.__target == __o.__target
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.__target))

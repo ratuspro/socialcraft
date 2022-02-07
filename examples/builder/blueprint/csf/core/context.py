@@ -8,7 +8,7 @@ class Context:
     def get_perceptions(self, name: str = None) -> list[Perception]:
 
         if name is None:
-            return set(self.__perceptions)
+            return list(self.__perceptions)
 
         filtered_perceptions = set()
         for perception in self.__perceptions:

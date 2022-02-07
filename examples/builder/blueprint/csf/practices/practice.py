@@ -37,3 +37,11 @@ class Practice(ABC):
 
     def is_valid(self, context) -> bool:
         return self._creator.is_salient(context)
+
+    @abstractmethod
+    def __eq__(self, __o: object) -> bool:
+        pass
+
+    @abstractmethod
+    def __hash__(self) -> int:
+        pass

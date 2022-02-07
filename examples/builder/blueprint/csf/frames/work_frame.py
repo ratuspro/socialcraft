@@ -14,12 +14,13 @@ class WorkFrame(CognitiveSocialFrame):
         self.__bot = bot
         self.__workplace = workplace
 
-    def is_salient(self, context: csf.core.Context) -> bool:
+    def get_affordances(self, context: csf.core.Context) -> set[csf.core.Affordance]:
         perceptions = context.get_perceptions("WORKTIME")
-        return len(perceptions) == 1 and perceptions[0].value > 0
 
-    def get_affordances(self) -> set:
-        return {csf.core.Affordance(GoToWork(self, self.__bot, self.__workplace), 1.1)}
+        if len(perceptions) == 1 and perceptions[0].value > 0:
+            return {csf.core.Affordance(GoToWork(self, self.__bot, self.__workplace), perceptions[0].value)}
+        else:
+            return set()
 
 
 class GoToWork(csf.practices.Practice):
@@ -29,6 +30,7 @@ class GoToWork(csf.practices.Practice):
         self.__workplace = workplace
 
     def start(self) -> None:
+        self._state = csf.practices.Practice.State.RUNNING
         if self.is_finished():
             return
 
@@ -36,7 +38,7 @@ class GoToWork(csf.practices.Practice):
             return
 
         self.__bot.pathfinder.goto(
-            pathfinder.goals.GoalNear(self.__workplace.x, self.__workplace.y, self.__workplace.z, 0.5),
+            pathfinder.goals.GoalNear(self.__workplace.x, self.__workplace.y, self.__workplace.z, 1.4),
             lambda err, result: print(result),
         )
 
@@ -45,3 +47,11 @@ class GoToWork(csf.practices.Practice):
 
     def is_finished(self) -> bool:
         return False
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, GoToWork):
+            return self.__workplace == __o.__workplace
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.__workplace))
