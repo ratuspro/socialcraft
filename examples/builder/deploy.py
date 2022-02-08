@@ -50,7 +50,13 @@ if __name__ == "__main__":
     agent1 = manager.create_agent(
         f"Agent1",
         blueprint=agent_blueprint,
-        custom_envs={"friends": '["Agent2"]', "bed": beds[0], "workplace": workplaces[0], "bar": bar},
+        custom_envs={
+            "friends": '["Agent2"]',
+            "bed": beds[0],
+            "lumberjack": "lumberjack",
+            "workplace": '{"x": -6, "y": 3, "z": 54}',
+            "bar": bar,
+        },
     )
     agent1.deploy()
 

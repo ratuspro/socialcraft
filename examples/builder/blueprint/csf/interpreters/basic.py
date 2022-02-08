@@ -74,3 +74,41 @@ class PartyTimeInterpreter(Interpreter):
 
     def __str__(self) -> str:
         return f"<PartyTimeInterpreter>"
+
+
+class InAreaInterpreter(Interpreter):
+    def __init__(self, area_center, area_radius, label_feature) -> None:
+        self.__area_center = area_center
+        self.__area_radius = area_radius
+        self.__label_feature = label_feature
+
+    def process_perceptions(self, perceptions: csf.core.Context) -> set[csf.core.Perception]:
+        player_position = list(perceptions.get_perceptions("SELF_POSITION"))[0].value
+
+        if player_position.distanceTo(self.__area_center) < self.__area_radius:
+            return {csf.core.Perception(self.__label_feature, 1)}
+
+        return set()
+
+    def __str__(self) -> str:
+        return f"<InAreaInterpreter>"
+
+
+class BlockInAreaInterpreter(Interpreter):
+    def __init__(self, area_center, area_radius, block_to_identify, label_to_add_feature) -> None:
+        self.__area_center = area_center
+        self.__area_radius = area_radius
+        self.__block_to_identify = block_to_identify
+        self.__label_to_add_feature = label_to_add_feature
+
+    def process_perceptions(self, perceptions: csf.core.Context) -> set[csf.core.Perception]:
+
+        player_position = list(perceptions.get_perceptions("PLAYER_POSITION"))[0].value
+
+        if player_position.distanceTo(self.__area_center) < self.__area_radius:
+            return {csf.core.Perception(self.__label_to_add_feature, 1)}
+
+        return set()
+
+    def __str__(self) -> str:
+        return f"<InAreaInterpreter>"

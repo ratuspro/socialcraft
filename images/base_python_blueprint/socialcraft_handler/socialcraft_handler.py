@@ -108,8 +108,8 @@ class Socialcraft_Handler:
         self.__logger.info("Bot sucessfully spawned!")
 
         self.__logger.info("Setting up mineflayer-pathfinder...")
-        mcData = require("minecraft-data")(self.__bot.version)
-        movements = pathfinder.Movements(self.__bot, mcData)
+        self.mcData = require("minecraft-data")(self.__bot.version)
+        movements = pathfinder.Movements(self.__bot, self.mcData)
         movements.allowSprinting = False
         movements.canDig = False
         self.__bot.pathfinder.setMovements(movements)

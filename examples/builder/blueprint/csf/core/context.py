@@ -21,4 +21,5 @@ class Context:
         self.__perceptions.add(perception)
 
     def add_perceptions(self, perceptions: set[Perception]) -> None:
-        self.__perceptions.update(perceptions)
+        for perception in perceptions:
+            self.add_perception(perception)

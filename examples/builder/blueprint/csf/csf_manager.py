@@ -66,6 +66,7 @@ class Brain:
                     self.__logger.debug(f"Added interpreted perception {new_perception}")
 
             context.add_perceptions(new_perceptions)
+
         self.__perception_buffer.clear()
         self.__logger.debug(f"Cleared perception's buffer.")
 
@@ -76,4 +77,6 @@ class Brain:
         affordances = set()
         for frame in self.__frames:
             affordances = affordances.union(frame.get_affordances(self.__lastContext))
+
+        affordances = filter(lambda aff: aff.salience > 0, affordances)
         return list(affordances)

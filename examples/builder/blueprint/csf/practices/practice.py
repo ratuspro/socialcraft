@@ -20,6 +20,9 @@ class Practice(ABC):
     def state(self):
         return self._state
 
+    def change_state(self, new_state: State):
+        self._state = new_state
+
     @abstractmethod
     def start(self) -> None:
         pass
@@ -31,12 +34,8 @@ class Practice(ABC):
     def exit(self) -> None:
         pass
 
-    @abstractmethod
     def is_finished(self) -> bool:
-        pass
-
-    def is_valid(self, context) -> bool:
-        return self._creator.is_salient(context)
+        return self._state == Practice.State.FINISHED
 
     @abstractmethod
     def __eq__(self, __o: object) -> bool:

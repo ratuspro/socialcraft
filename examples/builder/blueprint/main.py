@@ -6,8 +6,14 @@ from javascript import On, require, start, AsyncTask, stop, eval_js
 from socialcraft_handler import Socialcraft_Handler
 
 from csf import Brain, print_context
-from csf.frames import WorkFrame, HumanFrame, DrinkerFrame, BardFrame
-from csf.interpreters import SocialRelationshipInterpreter, WorkTimeInterpreter, SleepInterpreter, PartyTimeInterpreter
+from csf.frames import WorkFrame, HumanFrame, DrinkerFrame, BardFrame, LumberjackFrame
+from csf.interpreters import (
+    SocialRelationshipInterpreter,
+    WorkTimeInterpreter,
+    SleepInterpreter,
+    PartyTimeInterpreter,
+    InAreaInterpreter,
+)
 from csf.core import Perception
 from csf.practices import Practice
 
@@ -39,9 +45,16 @@ if handler.has_init_env_variable("friends"):
 csf.add_interpreter(SocialRelationshipInterpreter(friends))
 csf.add_interpreter(SleepInterpreter(16000, 23300))
 csf.add_interpreter(PartyTimeInterpreter())
+
 # Start Bot
 bot = handler.bot
-if handler.has_init_env_variable("workplace"):
+if handler.has_init_env_variable("lumberjack"):
+    position_json = json.loads(handler.get_init_env_variable("workplace"))
+    workplace = Vec3(position_json["x"], position_json["y"], position_json["z"])
+    csf.add_frame(LumberjackFrame(bot, workplace, 10))
+    csf.add_interpreter(InAreaInterpreter(workplace, 10, "IN_LUMBERYARD"))
+
+elif handler.has_init_env_variable("workplace"):
     position_json = json.loads(handler.get_init_env_variable("workplace"))
     workplace = Vec3(position_json["x"], position_json["y"], position_json["z"])
     csf.add_frame(WorkFrame(bot, workplace))
@@ -73,12 +86,14 @@ def async_perceive_world(task):
         csf.add_perception_to_buffer(Perception("TIME", bot.time.timeOfDay))
 
         bot_position = bot.entity.position
+        csf.add_perception_to_buffer(Perception("SELF_POSITION", bot_position))
 
         for entity in bot.entities:
             if int(entity) != int(bot.entity.id):
                 other_position = bot.entities[entity].position
                 if other_position.distanceTo(bot_position) < 10:
                     csf.add_perception_to_buffer(Perception("PLAYER", entity))
+
         logger.debug(f"World perceived!")
 
         logger.debug(f"Creating new context...")
@@ -133,29 +148,27 @@ def async_perceive_world(task):
         logger.info(
             f"Affordances updated after {(time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0} miliseconds"
         )
-        task.wait(5)
+
+        logger.info(f"Start new update at {bot.time.time}")
+        start_time = datetime.now()
+
+        if bot.active_affordance is not None:
+            if bot.active_affordance.object.state == Practice.State.CREATED:
+                print("Force Start Practice")
+                bot.active_affordance.object.start()
+
+            elif bot.active_affordance.object.state == Practice.State.RUNNING:
+                print("Force Update Practice")
+                bot.active_affordance.object.update()
+
+        time_spent = datetime.now() - start_time
+        logger.info(
+            f"Last update took {(time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0} miliseconds"
+        )
+
+        task.wait(2)
 
 
 @On(bot, "time")
 def handleTick(_):
-
-    if abs(bot.time.time - bot.last_update) < 200:
-        return
-    else:
-        bot.last_update = bot.time.time
-
-    logger.info(f"Start new update at {bot.time.time}")
-    start_time = datetime.now()
-
-    if bot.active_affordance is not None:
-
-        if bot.active_affordance.object.state == Practice.State.CREATED:
-            bot.active_affordance.object.start()
-
-        if bot.active_affordance.object.state == Practice.State.RUNNING:
-            bot.active_affordance.object.update()
-
-    time_spent = datetime.now() - start_time
-    logger.info(
-        f"Last update took {(time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0} miliseconds"
-    )
+    pass

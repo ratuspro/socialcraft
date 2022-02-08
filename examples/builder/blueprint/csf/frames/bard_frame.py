@@ -32,7 +32,8 @@ class TalkAbout(csf.practices.Practice):
         self.__finished = False
 
     def start(self) -> None:
-        self._state = csf.practices.Practice.State.RUNNING
+        self.change_state(csf.practices.Practice.State.RUNNING)
+
         if self.is_finished():
             return
 
@@ -52,26 +53,11 @@ class TalkAbout(csf.practices.Practice):
         bot_pathfinder = self.__bot.pathfinder
         bot_pathfinder.setGoal(goal)
 
-        @On(self.__bot, "goal_reached")
-        def handle_arrival(arg1, arg2):
-            off(self.__bot, "goal_reached", handle_arrival)
+    def update(self):
+        bot_position = self.__bot.entity.position
+        if not self.__bot.isSleeping and bot_position.distanceTo(self.position) < 1.5:
             self.__talk_about()
-
-        @On(self.__bot, "path_update")
-        def handle_path_update(arg1, arg2):
-            print("path_update")
-
-        @On(self.__bot, "goal_updated")
-        def handle_goal_updated(arg1, arg2, arg3):
-            print("goal_updated")
-
-        @On(self.__bot, "path_reset")
-        def handle_path_reset(arg1, arg2):
-            print("path_reset")
-
-        @On(self.__bot, "path_stop")
-        def handle_path_stop(arg1, arg2):
-            print("path_stop")
+            return
 
     def __talk_about(self):
         self.__bot.lookAt(self.__player.position)
@@ -79,7 +65,6 @@ class TalkAbout(csf.practices.Practice):
         self.__finished = True
 
     def exit(self) -> None:
-
         pass
 
     def is_finished(self) -> bool:

@@ -37,9 +37,10 @@ class Sleep(csf.practices.Practice):
         self.__bed_block = self.__bot.blockAt(self.__bed)
 
     def start(self) -> None:
-        self._state = csf.practices.Practice.State.RUNNING
         if self.is_finished():
             return
+
+        self.change_state(csf.practices.Practice.State.RUNNING)
 
         if self.__bot.isSleeping:
             return
@@ -49,23 +50,24 @@ class Sleep(csf.practices.Practice):
             return
 
         print("Setting sleeping target" + str(self.__bed))
-        self.__bot.pathfinder.goto(
+        self.__bot.pathfinder.setGoal(
             pathfinder.goals.GoalGetToBlock(self.__bed.x, self.__bed.y, self.__bed.z),
-            lambda err, result: self.__handle_arrival(err, result),
         )
 
-    def __handle_arrival(self, err, result):
-        if err is not None:
-            print(err)
-        self.__sleep()
+    def update(self):
+        bot_position = self.__bot.entity.position
+        if not self.__bot.isSleeping and bot_position.distanceTo(self.__bed) < 1.5:
+            self.__sleep()
+            return
 
     def exit(self) -> None:
         if self.__bot.isSleeping:
             self.__bot.wake(self.__on_awake)
 
-    def __on_awake(result):
-        print(err)
-        print(result)
+    def __on_awake(arg1, arg2, arg3):
+        print(arg1)
+        print(arg2)
+        print(arg3)
 
     def __sleep(self):
         self.__bot.sleep(self.__bed_block)
@@ -89,7 +91,7 @@ class WanderAround(csf.practices.Practice):
         curr_position = self.__bot.entity.position
 
         self.__target_position = Vec3(
-            curr_position.x + random.randrange(-8, 8), 0, curr_position.z + random.randrange(-8, 8)
+            curr_position.x + random.randrange(-8, 8), curr_position.y, curr_position.z + random.randrange(-8, 8)
         )
 
     def start(self) -> None:
@@ -101,15 +103,24 @@ class WanderAround(csf.practices.Practice):
         if bot_position.distanceTo(self.__target_position) < 1.5:
             return
 
-        self.__bot.pathfinder.goto(pathfinder.goals.GoalNearXZ(self.__target_position.x, self.__target_position.z, 3))
+        self.__bot.pathfinder.setGoal(
+            pathfinder.goals.GoalNearXZ(self.__target_position.x, self.__target_position.z, 1.5)
+        )
+
+        self.change_state(csf.practices.Practice.State.RUNNING)
+
+    def update(self):
+        bot_position = self.__bot.entity.position
+        if bot_position.distanceTo(self.__target_position) < 1.5:
+            self.change_state(csf.practices.Practice.State.FINISHED)
+            return
 
     def exit(self) -> None:
-        self.__bot.pathfinder.stop()
+        pass
 
     def is_finished(self) -> bool:
-        if self.__bot.entity.position.distanceTo(self.__target_position) < 1.5:
-            return True
-        return False
+        print(self.__bot.isMoving)
+        return self.state == csf.practices.Practice.State.FINISHED
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, WanderAround):
@@ -117,4 +128,4 @@ class WanderAround(csf.practices.Practice):
         return False
 
     def __hash__(self) -> int:
-        return hash((WanderAround))
+        return hash(0)
