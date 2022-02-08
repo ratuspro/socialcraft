@@ -108,8 +108,10 @@ class Socialcraft_Handler:
         self.__logger.info("Bot sucessfully spawned!")
 
         self.__logger.info("Setting up mineflayer-pathfinder...")
-        mcData = require("minecraft-data")(self.__bot.version)
-        movements = pathfinder.Movements(self.__bot, mcData)
+        self.mcData = require("minecraft-data")(self.__bot.version)
+        movements = pathfinder.Movements(self.__bot, self.mcData)
+        movements.allowSprinting = False
+        movements.canDig = False
         self.__bot.pathfinder.setMovements(movements)
 
         self.__logger.info("Waiting for pathfinder...")
@@ -166,6 +168,12 @@ class Socialcraft_Handler:
         if not self.__bot:
             self.__logger.error("Trying to get bot without establishing a connection first")
         return self.__bot
+
+    def has_init_env_variable(self, name) -> bool:
+        return f"SOCIALCRAFT_INIT_{name}" in os.environ
+
+    def get_init_env_variable(self, name) -> str:
+        return os.environ.get(f"SOCIALCRAFT_INIT_{name}")
 
     def __del__(self):
         self.__logger.info("Closing Brooker connection...")
