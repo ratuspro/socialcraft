@@ -1,13 +1,22 @@
 from abc import abstractclassmethod, abstractmethod
-import math
+import json
 import logging
 import sys
 from datetime import datetime
 from javascript import On, require, start, AsyncTask, stop, eval_js
 from socialcraft_handler import Socialcraft_Handler
 from vector3 import Vector3
+from practices import (
+    AvoidPeoplePractice,
+    GoToHousePractice,
+    Perceptron,
+    PerceptionLabel,
+    SleepPractice,
+    WanderAroundPractice,
+    RandomlyLookAround,
+    LookToRandomPlayer,
+)
 
-pathfinder = require("mineflayer-pathfinder")
 
 # Init Logger
 logger = logging.getLogger(__name__)
@@ -25,130 +34,61 @@ handler.connect()
 
 bot = handler.bot
 
+practices = []
+bot.kb = {}
 
-class PerceptionLabel:
-    TIME = 0
-    WEEKDAY = 1
-    RAIN = 2
-    THUNDER = 3
-    C0_NUMBER_PEOPLE = 4
-
-
-class Perception:
-    def __init__(self, label: PerceptionLabel, value: float) -> None:
-        self.__label = label
-        self.__value = value
-
-    @property
-    def label(self) -> PerceptionLabel:
-        return self.__label
-
-    @property
-    def value(self) -> float:
-        return self.__value
-
-
-class Percepton:
-    def __init__(self, label: PerceptionLabel, weight: float) -> None:
-        self.__label = label
-        self.__weigth = weight
-
-    @property
-    def label(self) -> PerceptionLabel:
-        return self.__label
-
-    @property
-    def weight(self) -> float:
-        return self.__weigth
-
-
-class Practice:
-    def __init__(self, bot, percepton: list[Percepton], name: str) -> None:
-        self.__percepton = percepton
-        self.__salience = 0
-        self.__name = name
-        self._bot = bot
-        self.__start_time = None
-
-    def update_salience(self, perceptions: dict[PerceptionLabel, float]) -> float:
-        new_salience = 0
-        for percepton in self.__percepton:
-            if percepton.label in perceptions.keys():
-                new_salience += percepton.weight * perceptions[percepton.label]
-
-        delta = new_salience - self.__salience
-        self.__salience = new_salience
-        return delta
-
-    @property
-    def salience(self):
-        return self.__salience
-
-    @property
-    def name(self):
-        return self.__name
-
-    @abstractmethod
-    def has_ended(self) -> bool:
-        return (datetime.now() - self.__start_time).total_seconds() > 20
-
-    @abstractmethod
-    def start(self):
-        self.__start_time = datetime.now()
-        pass
-
-    @abstractmethod
-    def update(self):
-        pass
-
-    @abstractmethod
-    def exit(self):
-        pass
-
-    def __str__(self) -> str:
-        return f"{self.__name} [{self.__salience}]"
-
-
-class AvoidPeoplePractice(Practice):
-    def __init__(self, bot, percepton: list[Percepton]) -> None:
-        super().__init__(bot, percepton, "AvoidPeoplePractice")
-        self.__target_position = None
-
-    def start(self):
-        super().start()
-        bot_position = Vector3(self._bot.entity.position)
-        nearest_target_position = Vector3(self._bot.nearestEntity(lambda entity: entity.type == "player").position)
-        self.__target_position = (
-            nearest_target_position.subtract(bot_position).normalize().multiply(Vector3(5, 0, 5)).add(bot_position)
+if handler.has_init_env_variable("bed"):
+    bed_json = json.loads(handler.get_init_env_variable("bed"))
+    bot.kb["bed_position"] = Vector3(bed_json["x"], bed_json["y"], bed_json["z"])
+    practices.append(
+        GoToHousePractice(
+            bot,
+            [],
         )
-        goal = pathfinder.goals.GoalNearXZ(self.__target_position.x, self.__target_position.z, 0.5)
-        self._bot.pathfinder.setGoal(goal)
+    )
 
-    def update(self):
-        super().update()
+    practices.append(
+        SleepPractice(
+            bot,
+            [],
+        )
+    )
 
-    def has_ended(self) -> bool:
-        return super().has_ended() or self.__target_position.xzDistanceTo(Vector3(self._bot.entity.position)) < 1
-
-    def exit(self):
-        super().exit()
-        self._bot.pathfinder.setGoal(None)
-
-
-practices = [
+practices.append(
     AvoidPeoplePractice(
         bot,
+        [],
+    )
+)
+
+practices.append(
+    WanderAroundPractice(
+        bot,
+        [Perceptron(PerceptionLabel.TIME, 0, 0.1)],
+    )
+)
+
+practices.append(
+    RandomlyLookAround(
+        bot,
+        [],
+    )
+)
+
+practices.append(
+    LookToRandomPlayer(
+        bot,
         [
-            Percepton(label=PerceptionLabel.C0_NUMBER_PEOPLE, weight=1),
+            Perceptron(label=PerceptionLabel.C0_NUMBER_PEOPLE, weight=1),
         ],
     )
-]
+)
 
 
 @AsyncTask(start=True)
 def async_basic_agent_loop(task):
 
-    best_practice = None
+    ongoing_practice = None
 
     while not task.stopping:
 
@@ -157,34 +97,39 @@ def async_basic_agent_loop(task):
 
         # Perceive
         perceptions = {}
-        perceptions[PerceptionLabel.TIME] = bot.time.time / 24000
+        perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
         perceptions[PerceptionLabel.WEEKDAY] = bot.time.day % 7
         perceptions[PerceptionLabel.RAIN] = bot.rainState
         perceptions[PerceptionLabel.THUNDER] = bot.thunderState
-        nearest_player_position = bot.nearestEntity().position
+        nearest_player_position = Vector3(bot.nearestEntity().position)
         perceptions[PerceptionLabel.C0_NUMBER_PEOPLE] = (
-            1 if nearest_player_position.xzDistanceTo(bot.entity.position) < 5 else 0
+            1 if nearest_player_position.xzDistanceTo(Vector3(bot.entity.position)) < 10 else 0
         )
 
-        print(perceptions)
-        # Update Practice
+        # Update Practices Saliences
         for practice in practices:
             practice.update_salience(perceptions)
         practices.sort(reverse=True, key=lambda practice: practice.salience)
 
-        if best_practice is not None:
-            if best_practice.has_ended():
+        for practice in practices:
+            print(practice)
+
+        # Update Ongoing Practice
+        if ongoing_practice is not None:
+            if not ongoing_practice.is_possible() or ongoing_practice.has_ended():
                 print(f"Exit Practice")
-                best_practice.exit()
-                best_practice = None
+                ongoing_practice.exit()
+                ongoing_practice = None
             else:
                 print("Update Practice")
-                best_practice.update()
+                ongoing_practice.update()
         else:
             if practices[0].salience > 0:
                 print("Start Practice")
-                best_practice = practices[0]
-                best_practice.start()
+                ongoing_practice = practices[0]
+                ongoing_practice.setup()
+                if ongoing_practice.is_possible():
+                    ongoing_practice.start()
             else:
                 print("Do nothing")
 
@@ -192,11 +137,11 @@ def async_basic_agent_loop(task):
         milliseconds = (time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0
         logger.info(f"Last update took {milliseconds} miliseconds")
 
-        if milliseconds < 1000:
-            time_to_wait = 1000 - int(milliseconds)
+        if milliseconds < 250:
+            time_to_wait = 250 - int(milliseconds)
             logger.info(f"Waiting {time_to_wait} miliseconds")
 
-            task.wait(time_to_wait / 1000)
+            task.wait(time_to_wait / 250)
 
 
 @On(bot, "time")

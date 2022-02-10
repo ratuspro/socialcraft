@@ -20,6 +20,12 @@ class Vector3:
         else:
             raise Exception()
 
+    def distanceTo(self, target) -> float:
+        dx = target.x - self.x
+        dy = target.y - self.y
+        dz = target.z - self.z
+        return math.sqrt(dx * dx + dy * dy + dz * dz)
+
     def xzDistanceTo(self, target) -> float:
         dx = target.x - self.x
         dz = target.z - self.z
@@ -42,6 +48,9 @@ class Vector3:
         if absolute == 0:
             return Vector3(0, 0, 0)
         return Vector3(self.x / absolute, self.y / absolute, self.z / absolute)
+
+    def toVec3(self) -> Vec3:
+        return Vec3(self.x, self.y, self.z)
 
     def __str__(self) -> str:
         return f"(x:{self.x},y:{self.y},z:{self.z})"
