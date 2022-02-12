@@ -38,7 +38,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Configuration
-Update_Min_Time = 1000
+Update_Min_Time = 2500
 
 # Init Socialcraft Handler
 handler = Socialcraft_Handler()
@@ -108,14 +108,21 @@ def async_basic_agent_loop(task):
         start_time = datetime.now()
 
         # Field of View
+        # total of 300 raycast in each frame
+        #         7
+        #         |
+        # -11 --- 0 --- 11
+        #         |
+        #        -7
+
         bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
-        blocks = []
-        for pitch_increment in range(-3, 4):
-            pitch = float(bot.entity.pitch + pitch_increment * 0.1)
+        blocks = set()
+        for pitch_increment in range(-7, 8):
+            pitch = float(bot.entity.pitch + pitch_increment * 0.125)
             y = math.sin(pitch)
 
-            for yaw_increment in range(-5, 6):
-                yaw = float(bot.entity.yaw + yaw_increment * 0.11)
+            for yaw_increment in range(-11, 12):
+                yaw = float(bot.entity.yaw + yaw_increment * 0.125)
                 x = -math.sin(yaw)
                 z = -math.cos(yaw)
 
@@ -125,9 +132,12 @@ def async_basic_agent_loop(task):
                 block = bot.world.raycast(h_vec3, d_vec3, 20)
 
                 if block is not None:
-                    blocks.append(block.displayName)
-        print(len(blocks))
+                    blocks.add(str(block.displayName))
+        blocks_l = list(blocks)
+        blocks_l.sort(key=lambda x: x)
 
+        for block in blocks_l:
+            print(f"{block}")
         # Perceive
         perceptions = {}
         perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
