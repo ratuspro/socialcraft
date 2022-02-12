@@ -2,6 +2,7 @@ from abc import abstractclassmethod, abstractmethod
 import json
 import logging
 import sys
+import math
 from datetime import datetime
 from javascript import On, require, start, AsyncTask, stop, eval_js
 from socialcraft_handler import Socialcraft_Handler
@@ -18,6 +19,14 @@ from practices import (
 )
 
 
+def ConvertToDirection(yaw, pitch):
+    return Vector3(
+        -math.sin(yaw) * math.cos(pitch),
+        math.sin(bot.entity.pitch),
+        -math.cos(yaw) * math.cos(pitch),
+    )
+
+
 # Init Logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -27,6 +36,9 @@ handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+# Configuration
+Update_Min_Time = 1000
 
 # Init Socialcraft Handler
 handler = Socialcraft_Handler()
@@ -95,6 +107,27 @@ def async_basic_agent_loop(task):
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
+        # Field of View
+        bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
+        blocks = []
+        for pitch_increment in range(-3, 4):
+            pitch = float(bot.entity.pitch + pitch_increment * 0.1)
+            y = math.sin(pitch)
+
+            for yaw_increment in range(-5, 6):
+                yaw = float(bot.entity.yaw + yaw_increment * 0.11)
+                x = -math.sin(yaw)
+                z = -math.cos(yaw)
+
+                bot_facing_direction = Vector3(x, y, z)
+                h_vec3 = bot_head_position.toVec3()
+                d_vec3 = bot_facing_direction.normalize().toVec3()
+                block = bot.world.raycast(h_vec3, d_vec3, 20)
+
+                if block is not None:
+                    blocks.append(block.displayName)
+        print(len(blocks))
+
         # Perceive
         perceptions = {}
         perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
@@ -137,11 +170,11 @@ def async_basic_agent_loop(task):
         milliseconds = (time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0
         logger.info(f"Last update took {milliseconds} miliseconds")
 
-        if milliseconds < 250:
-            time_to_wait = 250 - int(milliseconds)
+        if milliseconds < Update_Min_Time:
+            time_to_wait = Update_Min_Time - int(milliseconds)
             logger.info(f"Waiting {time_to_wait} miliseconds")
 
-            task.wait(time_to_wait / 250)
+            task.wait(time_to_wait / 1000)
 
 
 @On(bot, "time")
