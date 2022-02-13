@@ -107,37 +107,37 @@ def async_basic_agent_loop(task):
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
-        # Field of View
-        # total of 300 raycast in each frame
-        #         7
-        #         |
-        # -11 --- 0 --- 11
-        #         |
-        #        -7
-
         bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
         blocks = set()
-        for pitch_increment in range(-7, 8):
+
+        h_vec3 = bot_head_position.toVec3()
+
+        min_pitch = -6
+        max_pitch = 6
+        min_yaw = -4
+        max_yaw = 4
+
+        pitchs = []
+        yaws = []
+        for pitch_increment in range(min_pitch, max_pitch + 1):
             pitch = float(bot.entity.pitch + pitch_increment * 0.125)
-            y = math.sin(pitch)
+            pitchs.append(math.sin(pitch))
 
-            for yaw_increment in range(-11, 12):
-                yaw = float(bot.entity.yaw + yaw_increment * 0.125)
-                x = -math.sin(yaw)
-                z = -math.cos(yaw)
+        for yaw_increment in range(min_yaw, max_yaw + 1):
+            yaw = float(bot.entity.yaw + yaw_increment * 0.125)
+            yaws.append((-math.sin(yaw), -math.cos(yaw)))
 
-                bot_facing_direction = Vector3(x, y, z)
-                h_vec3 = bot_head_position.toVec3()
+        for pitch in pitchs:
+            for yaw in yaws:
+                bot_facing_direction = Vector3(yaw[0], pitch, yaw[1])
                 d_vec3 = bot_facing_direction.normalize().toVec3()
-                block = bot.world.raycast(h_vec3, d_vec3, 20)
+                world = bot.world
+                block = bot.world.raycast(h_vec3, d_vec3, 15)
 
                 if block is not None:
                     blocks.add(str(block.displayName))
-        blocks_l = list(blocks)
-        blocks_l.sort(key=lambda x: x)
 
-        for block in blocks_l:
-            print(f"{block}")
+        print(blocks)
         # Perceive
         perceptions = {}
         perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
@@ -183,8 +183,9 @@ def async_basic_agent_loop(task):
         if milliseconds < Update_Min_Time:
             time_to_wait = Update_Min_Time - int(milliseconds)
             logger.info(f"Waiting {time_to_wait} miliseconds")
-
             task.wait(time_to_wait / 1000)
+        else:
+            logger.info(f"Not waiting.")
 
 
 @On(bot, "time")
