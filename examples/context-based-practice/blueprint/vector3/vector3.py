@@ -52,5 +52,13 @@ class Vector3:
     def toVec3(self) -> Vec3:
         return Vec3(self.x, self.y, self.z)
 
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, Vector3):
+            return self.x == __o.x and self.y == __o.y and self.z == __o.z
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.x, self.y, self.z))
+
     def __str__(self) -> str:
         return f"(x:{self.x},y:{self.y},z:{self.z})"

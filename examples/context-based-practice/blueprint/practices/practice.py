@@ -7,8 +7,9 @@ class PerceptionLabel:
     WEEKDAY = 1
     RAIN = 2
     THUNDER = 3
-    C0_NUMBER_PEOPLE = 4
-
+    ISDAY = 4
+    ISNIGHT = 5
+    OWNBEDVISIBLE = 6
 
 class Perception:
     def __init__(self, label: PerceptionLabel, value: float) -> None:

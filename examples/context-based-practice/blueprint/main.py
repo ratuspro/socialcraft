@@ -3,6 +3,7 @@ import json
 import logging
 import sys
 import math
+import random
 from datetime import datetime
 from javascript import On, require, start, AsyncTask, stop, eval_js
 from socialcraft_handler import Socialcraft_Handler
@@ -55,14 +56,14 @@ if handler.has_init_env_variable("bed"):
     practices.append(
         GoToHousePractice(
             bot,
-            [],
+            [Perceptron(PerceptionLabel.ISNIGHT, 1, 0)],
         )
     )
 
     practices.append(
         SleepPractice(
             bot,
-            [],
+            [Perceptron(PerceptionLabel.ISNIGHT, 0.6, 0), Perceptron(PerceptionLabel.OWNBEDVISIBLE, 0.6, 0)],
         )
     )
 
@@ -76,25 +77,81 @@ practices.append(
 practices.append(
     WanderAroundPractice(
         bot,
-        [Perceptron(PerceptionLabel.TIME, 0, 0.1)],
+        [Perceptron(PerceptionLabel.ISDAY, 1, 0)],
     )
 )
 
 practices.append(
     RandomlyLookAround(
         bot,
-        [],
+        [Perceptron(PerceptionLabel.ISNIGHT, 0, 0.5)],
     )
 )
 
 practices.append(
     LookToRandomPlayer(
         bot,
-        [
-            Perceptron(label=PerceptionLabel.C0_NUMBER_PEOPLE, weight=1),
-        ],
+        [Perceptron(PerceptionLabel.ISNIGHT, 0, 0.5)],
     )
 )
+
+
+def perceive_blocks():
+    bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
+    h_vec3 = bot_head_position.toVec3()
+
+    min_pitch = -6
+    max_pitch = 6
+    min_yaw = -4
+    max_yaw = 4
+
+    pitchs = []
+    yaws = []
+    for pitch_increment in range(min_pitch, max_pitch + 1):
+        pitch = float(bot.entity.pitch + pitch_increment * 0.125)
+        pitchs.append(math.sin(pitch))
+
+    for yaw_increment in range(min_yaw, max_yaw + 1):
+        yaw = float(bot.entity.yaw + yaw_increment * 0.125)
+        yaws.append((-math.sin(yaw), -math.cos(yaw)))
+
+    blocks_position = {}
+    blocks_by_type = {}
+
+    for pitch in pitchs:
+        for yaw in yaws:
+            bot_facing_direction = Vector3(yaw[0], pitch, yaw[1])
+            d_vec3 = bot_facing_direction.normalize().toVec3()
+            block = bot.world.raycast(h_vec3, d_vec3, 15)
+
+            if block is not None:
+                block_position = Vector3(block.position)
+                if block_position not in blocks_position:
+                    blocks_position[block_position] = block.displayName
+                    if block.displayName not in blocks_by_type:
+                        blocks_by_type[block.displayName] = []
+                    blocks_by_type[block.displayName].append(block_position)
+
+    return blocks_position, blocks_by_type
+
+
+def perceive_players():
+    players = {}
+
+    bot_position = Vector3(bot.entity.position)
+
+    for player in bot.players:
+
+        if player == bot.username:
+            continue
+
+        player_entity = bot.players[player].entity
+        if player_entity is not None:
+            player_pos = Vector3(player_entity.position)
+            if bot_position.xzDistanceTo(player_pos) < 20:
+                players[player_pos] = player
+
+    return players
 
 
 @AsyncTask(start=True)
@@ -107,55 +164,31 @@ def async_basic_agent_loop(task):
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
-        bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
-        blocks = set()
+        blocks_by_position, blocks_by_type = perceive_blocks()
+        players = perceive_players()
 
-        h_vec3 = bot_head_position.toVec3()
-
-        min_pitch = -6
-        max_pitch = 6
-        min_yaw = -4
-        max_yaw = 4
-
-        pitchs = []
-        yaws = []
-        for pitch_increment in range(min_pitch, max_pitch + 1):
-            pitch = float(bot.entity.pitch + pitch_increment * 0.125)
-            pitchs.append(math.sin(pitch))
-
-        for yaw_increment in range(min_yaw, max_yaw + 1):
-            yaw = float(bot.entity.yaw + yaw_increment * 0.125)
-            yaws.append((-math.sin(yaw), -math.cos(yaw)))
-
-        for pitch in pitchs:
-            for yaw in yaws:
-                bot_facing_direction = Vector3(yaw[0], pitch, yaw[1])
-                d_vec3 = bot_facing_direction.normalize().toVec3()
-                world = bot.world
-                block = bot.world.raycast(h_vec3, d_vec3, 15)
-
-                if block is not None:
-                    blocks.add(str(block.displayName))
-
-        print(blocks)
         # Perceive
         perceptions = {}
         perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
+        perceptions[PerceptionLabel.ISDAY] = 1 if bot.time.isDay else 0
+        perceptions[PerceptionLabel.ISNIGHT] = 1 if not bot.time.isDay else 0
         perceptions[PerceptionLabel.WEEKDAY] = bot.time.day % 7
         perceptions[PerceptionLabel.RAIN] = bot.rainState
         perceptions[PerceptionLabel.THUNDER] = bot.thunderState
-        nearest_player_position = Vector3(bot.nearestEntity().position)
-        perceptions[PerceptionLabel.C0_NUMBER_PEOPLE] = (
-            1 if nearest_player_position.xzDistanceTo(Vector3(bot.entity.position)) < 10 else 0
-        )
+
+        perceptions[PerceptionLabel.OWNBEDVISIBLE] = 0
+        if "Red Bed" in blocks_by_type and bot.kb["bed_position"] is not None:
+            for position in blocks_by_type["Red Bed"]:
+                if position.xzDistanceTo(bot.kb["bed_position"]) < 2:
+                    perceptions[PerceptionLabel.OWNBEDVISIBLE] = 1
+                    break
+
+        print(perceptions)
 
         # Update Practices Saliences
         for practice in practices:
             practice.update_salience(perceptions)
         practices.sort(reverse=True, key=lambda practice: practice.salience)
-
-        for practice in practices:
-            print(practice)
 
         # Update Ongoing Practice
         if ongoing_practice is not None:
@@ -185,7 +218,7 @@ def async_basic_agent_loop(task):
             logger.info(f"Waiting {time_to_wait} miliseconds")
             task.wait(time_to_wait / 1000)
         else:
-            logger.info(f"Not waiting.")
+            logger.info(f"Not waiting!")
 
 
 @On(bot, "time")
