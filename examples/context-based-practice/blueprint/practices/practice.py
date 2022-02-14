@@ -10,6 +10,8 @@ class PerceptionLabel:
     ISDAY = 4
     ISNIGHT = 5
     OWNBEDVISIBLE = 6
+    WOODINSIGHT = 7
+
 
 class Perception:
     def __init__(self, label: PerceptionLabel, value: float) -> None:

@@ -17,6 +17,7 @@ from practices import (
     WanderAroundPractice,
     RandomlyLookAround,
     LookToRandomPlayer,
+    ChoopWood,
 )
 
 
@@ -92,6 +93,13 @@ practices.append(
     LookToRandomPlayer(
         bot,
         [Perceptron(PerceptionLabel.ISNIGHT, 0, 0.5)],
+    )
+)
+
+practices.append(
+    ChoopWood(
+        bot,
+        [Perceptron(PerceptionLabel.ISDAY, 0.5, 0), Perceptron(PerceptionLabel.WOODINSIGHT, 1, 0)],
     )
 )
 
@@ -183,7 +191,10 @@ def async_basic_agent_loop(task):
                     perceptions[PerceptionLabel.OWNBEDVISIBLE] = 1
                     break
 
-        print(perceptions)
+        perceptions[PerceptionLabel.WOODINSIGHT] = 0
+        if "Oak Log" in blocks_by_type:
+            perceptions[PerceptionLabel.WOODINSIGHT] = 1
+            bot.kb["wood_blocks"] = blocks_by_type["Oak Log"]
 
         # Update Practices Saliences
         for practice in practices:
@@ -193,16 +204,16 @@ def async_basic_agent_loop(task):
         # Update Ongoing Practice
         if ongoing_practice is not None:
             if not ongoing_practice.is_possible() or ongoing_practice.has_ended():
-                print(f"Exit Practice")
+                print(f"Exit Practice {ongoing_practice}")
                 ongoing_practice.exit()
                 ongoing_practice = None
             else:
-                print("Update Practice")
+                print(f"Update Practice {ongoing_practice}")
                 ongoing_practice.update()
         else:
             if practices[0].salience > 0:
-                print("Start Practice")
                 ongoing_practice = practices[0]
+                print(f"Start Practice {ongoing_practice}")
                 ongoing_practice.setup()
                 if ongoing_practice.is_possible():
                     ongoing_practice.start()

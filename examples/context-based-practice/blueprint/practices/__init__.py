@@ -6,4 +6,5 @@ from .basic_practices import (
     WanderAroundPractice,
     RandomlyLookAround,
     LookToRandomPlayer,
+    ChoopWood
 )

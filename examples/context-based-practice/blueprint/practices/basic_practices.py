@@ -3,7 +3,7 @@ from tracemalloc import start
 
 from setuptools import setup
 from vector3 import Vector3
-from .practice import Practice, Perceptron
+from .practice import Perception, Practice, Perceptron
 
 from javascript import require, eval_js
 
@@ -200,3 +200,64 @@ class LookToRandomPlayer(Practice):
 
     def is_possible(self) -> bool:
         return True
+
+
+class ChoopWood(Practice):
+
+    __target_wood_block: Vector3
+
+    def __init__(self, bot, percepton: list[Perceptron]) -> None:
+        super().__init__(bot, percepton, "ChoopWood")
+        self.__target_wood_block = None
+
+    def setup(self) -> None:
+        super().setup()
+        self.__target_wood_block = random.choices(self._bot.kb["wood_blocks"])
+
+    def start(self):
+        super().start()
+
+    def update(self):
+        super().update()
+
+    def is_possible(self) -> bool:
+        return True
+
+    def has_ended(self) -> bool:
+        return super().has_ended()
+
+    def exit(self):
+        super().exit()
+
+
+class ChoopWood(Practice):
+
+    __target_wood_block: Vector3
+
+    def __init__(self, bot, percepton: list[Perceptron]) -> None:
+        super().__init__(bot, percepton, "ChoopWood")
+        self.__target_wood_block = None
+
+    def setup(self) -> None:
+        super().setup()
+        blocks = list(self._bot.kb["wood_blocks"])
+        if len(blocks) > 0:
+            print(blocks)
+            self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
+            print(self.__target_wood_block)
+
+    def start(self):
+        super().start()
+        print(self._bot.dig(self.__target_wood_block))
+
+    def update(self):
+        super().update()
+
+    def is_possible(self) -> bool:
+        return self.__target_wood_block is not None
+
+    def has_ended(self) -> bool:
+        return super().has_ended()
+
+    def exit(self):
+        super().exit()
