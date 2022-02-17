@@ -367,19 +367,24 @@ class AgentManager:
 
     def __setup_messaging(self):
 
-        socialcraft_brookers = self.__get_docker_client().containers.list(filters={"name": "socialcraft-brooker"})
+        socialcraft_brookers = self.__get_docker_client().containers.list(
+            filters={"name": "socialcraft-brooker"}, all=True
+        )
 
-        if len(socialcraft_brookers) == 0:
-            self.__get_docker_client().containers.run(
-                "rabbitmq:management",
-                detach=True,
-                ports={"5672/tcp": 5672, "15672/tcp": 15672},
-                name="socialcraft-brooker",
-                environment={
-                    "RABBITMQ_DEFAULT_USER": "socialcraft",
-                    "RABBITMQ_DEFAULT_PASS": "redstone",
-                },
-            )
+        if len(socialcraft_brookers) > 0:
+            for brooker in socialcraft_brookers:
+                brooker.remove(force=True)
+
+        self.__get_docker_client().containers.run(
+            "rabbitmq:management",
+            detach=True,
+            ports={"5672/tcp": 5672, "15672/tcp": 15672},
+            name="socialcraft-brooker",
+            environment={
+                "RABBITMQ_DEFAULT_USER": "socialcraft",
+                "RABBITMQ_DEFAULT_PASS": "redstone",
+            },
+        )
 
         while True:
             try:
