@@ -23,6 +23,8 @@ from practices import (
     Perception,
 )
 
+from agent import perceive_blocks, perceive_players
+
 
 def ConvertToDirection(yaw, pitch):
     return Vector3(
@@ -105,64 +107,6 @@ practices.append(
         [Perceptron(PerceptionLabel.ISDAY, 0.5, 0), Perceptron(PerceptionLabel.WOODINSIGHT, 1, 0)],
     )
 )
-
-
-def perceive_blocks() -> Tuple[Dict[Vector3, str], Dict[str, Vector3]]:
-    bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
-    h_vec3 = bot_head_position.toVec3()
-
-    min_pitch = -6
-    max_pitch = 6
-    min_yaw = -4
-    max_yaw = 4
-
-    pitchs = []
-    yaws = []
-    for pitch_increment in range(min_pitch, max_pitch + 1):
-        pitch = float(bot.entity.pitch + pitch_increment * 0.125)
-        pitchs.append(math.sin(pitch))
-
-    for yaw_increment in range(min_yaw, max_yaw + 1):
-        yaw = float(bot.entity.yaw + yaw_increment * 0.125)
-        yaws.append((-math.sin(yaw), -math.cos(yaw)))
-
-    blocks_position = {}
-    blocks_by_type = {}
-
-    for pitch in pitchs:
-        for yaw in yaws:
-            bot_facing_direction = Vector3(yaw[0], pitch, yaw[1])
-            d_vec3 = bot_facing_direction.normalize().toVec3()
-            block = bot.world.raycast(h_vec3, d_vec3, 15)
-
-            if block is not None:
-                block_position = Vector3(block.position)
-                if block_position not in blocks_position:
-                    blocks_position[block_position] = block.displayName
-                    if block.displayName not in blocks_by_type:
-                        blocks_by_type[block.displayName] = []
-                    blocks_by_type[block.displayName].append(block_position)
-
-    return blocks_position, blocks_by_type
-
-
-def perceive_players() -> Dict[str, Vector3]:
-    players = {}
-
-    bot_position = Vector3(bot.entity.position)
-
-    for player in bot.players:
-
-        if player == bot.username:
-            continue
-
-        player_entity = bot.players[player].entity
-        if player_entity is not None:
-            player_pos = Vector3(player_entity.position)
-            if bot_position.xzDistanceTo(player_pos) < 20:
-                players[player_pos] = player
-
-    return players
 
 
 @AsyncTask(start=True)
