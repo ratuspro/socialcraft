@@ -3,7 +3,7 @@ from tracemalloc import start
 
 from setuptools import setup
 from vector3 import Vector3
-from .practice import Perception, Practice, Perceptron
+from .practice import Perception, Practice, Perceptron, Context
 
 from javascript import require, eval_js
 
@@ -17,8 +17,8 @@ class AvoidPeoplePractice(Practice):
         super().__init__(bot, percepton, "AvoidPeoplePractice")
         self.__target_position = None
 
-    def setup(self) -> None:
-        super().setup()
+    def setup(self, context: Context) -> None:
+        super().setup(context)
         bot_position = Vector3(self._bot.entity.position)
         nearest_target_position = Vector3(self._bot.nearestEntity(lambda entity: entity.type == "player").position)
         self.__target_position = (
@@ -52,8 +52,8 @@ class GoToHousePractice(Practice):
         super().__init__(bot, percepton, "GoToHousePractice")
         self.__target_bed = None
 
-    def setup(self) -> None:
-        super().setup()
+    def setup(self, context: Context) -> None:
+        super().setup(context)
         self.__target_bed = self._bot.kb["bed_position"]
 
     def start(self):
@@ -83,8 +83,8 @@ class SleepPractice(Practice):
         super().__init__(bot, percepton, "SleepPractice")
         self.__target_bed = None
 
-    def setup(self):
-        super().setup()
+    def setup(self, context: Context):
+        super().setup(context)
         self.__target_bed = self._bot.kb["bed_position"]
 
     def start(self):
@@ -121,8 +121,8 @@ class WanderAroundPractice(Practice):
         super().__init__(bot, percepton, "WanderAround", 5)
         self.__target_position = None
 
-    def setup(self):
-        super().setup()
+    def setup(self, context: Context):
+        super().setup(context)
         self.__target_position = Vector3(self._bot.entity.position).add(
             Vector3(random.randrange(-5, 5), 0, random.randrange(-5, 5))
         )
@@ -156,7 +156,7 @@ class RandomlyLookAround(Practice):
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "RandomlyLookAround")
 
-    def setup(self) -> None:
+    def setup(self, context: Context) -> None:
         self.__target_yaw = random.normalvariate(self._bot.entity.yaw, 3.14 / 3)
         self.__target_pitch = random.normalvariate(0, 0.3 / 2)
 
@@ -181,7 +181,7 @@ class LookToRandomPlayer(Practice):
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "LookToRandomPlayer", timeout=5)
 
-    def setup(self) -> None:
+    def setup(self, context: Context) -> None:
         self.__target_player = self._bot.nearestEntity()
 
     def start(self) -> None:
@@ -210,18 +210,23 @@ class ChoopWood(Practice):
         super().__init__(bot, percepton, "ChoopWood")
         self.__target_wood_block = None
 
-    def setup(self) -> None:
-        super().setup()
-        self.__target_wood_block = random.choices(self._bot.kb["wood_blocks"])
+    def setup(self, context: Context) -> None:
+        super().setup(context)
+        blocks = list(self._bot.kb["wood_blocks"])
+        if len(blocks) > 0:
+            print(blocks)
+            self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
+            print(self.__target_wood_block)
 
     def start(self):
         super().start()
+        print(self._bot.dig(self.__target_wood_block))
 
     def update(self):
         super().update()
 
     def is_possible(self) -> bool:
-        return True
+        return self.__target_wood_block is not None
 
     def has_ended(self) -> bool:
         return super().has_ended()
@@ -230,16 +235,16 @@ class ChoopWood(Practice):
         super().exit()
 
 
-class ChoopWood(Practice):
+class TakeBlock(Practice):
 
-    __target_wood_block: Vector3
+    __target_block_position: Vector3
 
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
-        super().__init__(bot, percepton, "ChoopWood")
-        self.__target_wood_block = None
+        super().__init__(bot, percepton, "TakeBlock")
+        self.__target_block_position = None
 
-    def setup(self) -> None:
-        super().setup()
+    def setup(self, context: Context) -> None:
+        super().setup(context)
         blocks = list(self._bot.kb["wood_blocks"])
         if len(blocks) > 0:
             print(blocks)

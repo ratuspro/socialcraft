@@ -5,6 +5,7 @@ import sys
 import math
 import random
 from datetime import datetime
+from typing import Dict, Tuple
 from javascript import On, require, start, AsyncTask, stop, eval_js
 from socialcraft_handler import Socialcraft_Handler
 from vector3 import Vector3
@@ -18,6 +19,8 @@ from practices import (
     RandomlyLookAround,
     LookToRandomPlayer,
     ChoopWood,
+    Context,
+    Perception,
 )
 
 
@@ -104,7 +107,7 @@ practices.append(
 )
 
 
-def perceive_blocks():
+def perceive_blocks() -> Tuple[Dict[Vector3, str], Dict[str, Vector3]]:
     bot_head_position = Vector3(bot.entity.position).add(Vector3(0, bot.entity.height, 0))
     h_vec3 = bot_head_position.toVec3()
 
@@ -143,7 +146,7 @@ def perceive_blocks():
     return blocks_position, blocks_by_type
 
 
-def perceive_players():
+def perceive_players() -> Dict[str, Vector3]:
     players = {}
 
     bot_position = Vector3(bot.entity.position)
@@ -176,29 +179,34 @@ def async_basic_agent_loop(task):
         players = perceive_players()
 
         # Perceive
-        perceptions = {}
-        perceptions[PerceptionLabel.TIME] = bot.time.timeOfDay / 24000
-        perceptions[PerceptionLabel.ISDAY] = 1 if bot.time.isDay else 0
-        perceptions[PerceptionLabel.ISNIGHT] = 1 if not bot.time.isDay else 0
-        perceptions[PerceptionLabel.WEEKDAY] = bot.time.day % 7
-        perceptions[PerceptionLabel.RAIN] = bot.rainState
-        perceptions[PerceptionLabel.THUNDER] = bot.thunderState
+        context = Context()
+        context.add_perception(Perception("TIME", bot.time.timeOfDay / 24000))
+        context.add_perception(Perception("ISDAY", 1 if bot.time.isDay else 0))
+        context.add_perception(Perception("ISNIGHT", 1 if not bot.time.isDay else 0))
+        context.add_perception(Perception("WEEKDAY", bot.time.day % 7))
+        context.add_perception(Perception("RAIN", bot.rainState))
+        context.add_perception(Perception("THUNDER", bot.thunderState))
 
-        perceptions[PerceptionLabel.OWNBEDVISIBLE] = 0
-        if "Red Bed" in blocks_by_type and bot.kb["bed_position"] is not None:
-            for position in blocks_by_type["Red Bed"]:
-                if position.xzDistanceTo(bot.kb["bed_position"]) < 2:
-                    perceptions[PerceptionLabel.OWNBEDVISIBLE] = 1
-                    break
+        for block_pos, type in blocks_by_position.items():
+            context.add_perception(Perception("BLOCK", (block_pos, type)))
+            if type == "Oak Log":
+                context.add_perception(Perception("WOODINSIGHT", 1))
 
-        perceptions[PerceptionLabel.WOODINSIGHT] = 0
-        if "Oak Log" in blocks_by_type:
-            perceptions[PerceptionLabel.WOODINSIGHT] = 1
-            bot.kb["wood_blocks"] = blocks_by_type["Oak Log"]
+            if (
+                type == "Red Bed"
+                and bot.kb["bed_position"] is not None
+                and block_pos.toVec3().xzDistanceTo(bot.kb["bed_position"]) < 2
+            ):
+                context.add_perception(Perception("OWNBEDVISIBLE", 1))
+
+        for player_pos, player_name in players.items():
+            context.add_perception(Perception("PLAYER", (player_pos, player_name)))
+
+        pe = context.get_perceptions()
 
         # Update Practices Saliences
         for practice in practices:
-            practice.update_salience(perceptions)
+            practice.update_salience(context)
         practices.sort(reverse=True, key=lambda practice: practice.salience)
 
         # Update Ongoing Practice
@@ -214,7 +222,7 @@ def async_basic_agent_loop(task):
             if practices[0].salience > 0:
                 ongoing_practice = practices[0]
                 print(f"Start Practice {ongoing_practice}")
-                ongoing_practice.setup()
+                ongoing_practice.setup(context)
                 if ongoing_practice.is_possible():
                     ongoing_practice.start()
             else:
