@@ -14,9 +14,14 @@ class Vector3:
             self.z = inp[2]
 
         elif len(inp) == 1:
-            self.x = inp[0].x
-            self.y = inp[0].y
-            self.z = inp[0].z
+            if isinstance(inp[0], tuple) or isinstance(inp[0], list):
+                self.x = inp[0][0]
+                self.y = inp[0][1]
+                self.z = inp[0][2]
+            else:
+                self.x = inp[0].x
+                self.y = inp[0].y
+                self.z = inp[0].z
         else:
             raise Exception()
 

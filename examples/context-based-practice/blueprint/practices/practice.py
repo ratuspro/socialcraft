@@ -72,9 +72,6 @@ class Context:
         all_perceptions = []
         for _, perceptions in self.__indexed_by_label.items():
             all_perceptions.extend(perceptions)
-
-        for p in all_perceptions:
-            print(p)
         return all_perceptions
 
 

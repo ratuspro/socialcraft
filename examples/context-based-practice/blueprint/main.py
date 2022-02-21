@@ -119,8 +119,8 @@ def async_basic_agent_loop(task):
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
-        blocks_by_position, blocks_by_type = perceive_blocks()
-        players = perceive_players()
+        blocks_by_position = perceive_blocks(bot)
+        players = perceive_players(bot)
 
         # Perceive
         context = Context()
@@ -145,8 +145,6 @@ def async_basic_agent_loop(task):
 
         for player_pos, player_name in players.items():
             context.add_perception(Perception("PLAYER", (player_pos, player_name)))
-
-        pe = context.get_perceptions()
 
         # Update Practices Saliences
         for practice in practices:
