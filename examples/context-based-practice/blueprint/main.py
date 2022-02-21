@@ -62,14 +62,14 @@ if handler.has_init_env_variable("bed"):
     practices.append(
         GoToHousePractice(
             bot,
-            [Perceptron(PerceptionLabel.ISNIGHT, 1, 0)],
+            [Perceptron("ISNIGHT", 1, 0)],
         )
     )
 
     practices.append(
         SleepPractice(
             bot,
-            [Perceptron(PerceptionLabel.ISNIGHT, 0.6, 0), Perceptron(PerceptionLabel.OWNBEDVISIBLE, 0.6, 0)],
+            [Perceptron("ISNIGHT", 3, 0), Perceptron("OWNBEDVISIBLE", 0.6, 0)],
         )
     )
 
@@ -83,28 +83,28 @@ practices.append(
 practices.append(
     WanderAroundPractice(
         bot,
-        [Perceptron(PerceptionLabel.ISDAY, 1, 0)],
+        [Perceptron("ISDAY", 1, 0)],
     )
 )
 
 practices.append(
     RandomlyLookAround(
         bot,
-        [Perceptron(PerceptionLabel.ISNIGHT, 0, 0.5)],
+        [Perceptron("ISNIGHT", 0, 0.5)],
     )
 )
 
 practices.append(
     LookToRandomPlayer(
         bot,
-        [Perceptron(PerceptionLabel.ISNIGHT, 0, 0.5)],
+        [Perceptron("ISNIGHT", 0, 0.5)],
     )
 )
 
 practices.append(
     ChoopWood(
         bot,
-        [Perceptron(PerceptionLabel.ISDAY, 0.5, 0), Perceptron(PerceptionLabel.WOODINSIGHT, 1, 0)],
+        [Perceptron("ISDAY", 0.5, 0), Perceptron("WOODINSIGHT", 1, 0)],
     )
 )
 
@@ -132,14 +132,15 @@ def async_basic_agent_loop(task):
         context.add_perception(Perception("THUNDER", bot.thunderState))
 
         for block_pos, type in blocks_by_position.items():
-            context.add_perception(Perception("BLOCK", (block_pos, type)))
+            context.add_block_perception(Perception("BLOCK", (type, block_pos)))
+
             if type == "Oak Log":
                 context.add_perception(Perception("WOODINSIGHT", 1))
 
             if (
                 type == "Red Bed"
                 and bot.kb["bed_position"] is not None
-                and block_pos.toVec3().xzDistanceTo(bot.kb["bed_position"]) < 2
+                and block_pos.xzDistanceTo(bot.kb["bed_position"]) < 2
             ):
                 context.add_perception(Perception("OWNBEDVISIBLE", 1))
 
@@ -150,6 +151,9 @@ def async_basic_agent_loop(task):
         for practice in practices:
             practice.update_salience(context)
         practices.sort(reverse=True, key=lambda practice: practice.salience)
+
+        for practice in practices:
+            print("{:<30} {:<5}".format(practice.name, practice.salience))
 
         # Update Ongoing Practice
         if ongoing_practice is not None:
