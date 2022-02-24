@@ -1,10 +1,10 @@
 from typing import Tuple, Dict, List
 from javascript import eval_js
 from vector3 import Vector3
-from practices import Player
+from practices import Player, Block
 
 
-def perceive_blocks(bot) -> Dict[Vector3, str]:
+def perceive_blocks(bot) -> Dict[Vector3, Block]:
     blocks_by_position = {}
     eval_js(
         """
@@ -44,7 +44,9 @@ def perceive_blocks(bot) -> Dict[Vector3, str]:
     )
     output = {}
     for block, value in blocks_by_position.items():
-        output[Vector3(tuple(map(int, block.replace("(", "").replace(")", "").split(", "))))] = value
+        position = Vector3(tuple(map(int, block.replace("(", "").replace(")", "").split(", "))))
+        block_obj = Block(value, position)
+        output[position] = block_obj
     return output
 
 

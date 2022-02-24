@@ -21,7 +21,7 @@ from practices import (
     Context,
     Perception,
 )
-from interpreters import PeopleInterpreterManager, PeopleCloseBy
+from interpreters import PeopleInterpreterManager, PeopleCloseBy, BlockInterpreterManager, WoodCloseBy
 
 
 from agent import perceive_blocks, perceive_players
@@ -114,6 +114,9 @@ p_interpreter_manager.add_interpreter(PeopleCloseBy(5, "PLAYER_VERY_CLOSE"))
 p_interpreter_manager.add_interpreter(PeopleCloseBy(10, "PLAYER_CLOSE"))
 p_interpreter_manager.add_interpreter(PeopleCloseBy(20, "PLAYER_FAR"))
 
+b_interpreter_manager = BlockInterpreterManager(bot)
+b_interpreter_manager.add_interpreter(WoodCloseBy())
+
 
 @AsyncTask(start=True)
 def async_basic_agent_loop(task):
@@ -144,10 +147,11 @@ def async_basic_agent_loop(task):
 
         # Perceive Time
         p_start_time = datetime.now()
-        context.add_perception(Perception("TIME", bot.time.timeOfDay / 24000))
-        context.add_perception(Perception("ISDAY", 1 if bot.time.isDay else 0))
-        context.add_perception(Perception("ISNIGHT", 1 if not bot.time.isDay else 0))
-        context.add_perception(Perception("WEEKDAY", bot.time.day % 7))
+        time_of_day = int(bot.time.timeOfDay)
+        is_day = bool(bot.time.isDay)
+        context.add_perception(Perception("TIME", time_of_day / 24000))
+        context.add_perception(Perception("ISDAY", 1 if is_day else 0))
+        context.add_perception(Perception("ISNIGHT", 1 if not is_day else 0))
         p_delta = datetime.now() - p_start_time
         p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
         logger.debug(f"Perceiving time took {p_milliseconds} miliseconds")
@@ -162,23 +166,17 @@ def async_basic_agent_loop(task):
 
         # Perceive & Interpret Blocks
         p_start_time = datetime.now()
-        for block_pos, type in blocks_by_position.items():
-            context.add_block_perception(Perception("BLOCK", (type, block_pos)))
-
-            if type == "Oak Log":
-                context.add_perception(Perception("WOODINSIGHT", 1))
-
-            if (
-                type == "Red Bed"
-                and bot.kb["bed_position"] is not None
-                and block_pos.xzDistanceTo(bot.kb["bed_position"]) < 2
-            ):
-                context.add_perception(Perception("OWNBEDVISIBLE", 1))
+        blocks = list(blocks_by_position.values())
+        block_interpretations = b_interpreter_manager.process(blocks)
+        for interpretation in block_interpretations:
+            context.add_perception(interpretation)
+        for block in blocks:
+            context.add_block_perception(Perception("BLOCK", block))
         p_delta = datetime.now() - p_start_time
         p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
         logger.debug(f"Interpreting blocks took {p_milliseconds} miliseconds")
 
-        # Perceive & Interpret People
+        # Interpret People
         p_start_time = datetime.now()
         player_interpretations = p_interpreter_manager.process(players)
         for interpretation in player_interpretations:

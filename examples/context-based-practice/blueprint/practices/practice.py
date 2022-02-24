@@ -5,6 +5,47 @@ from vector3 import Vector3
 import math
 
 
+class Player:
+
+    __name: str
+    __position: Vector3
+
+    def __init__(self, name: str, position: Vector3) -> None:
+        self.__name = name
+        self.__position = position
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def position(self) -> Vector3:
+        return self.__position
+
+    def __str__(self) -> str:
+        return f"Player {self.__name} at {self.__position}"
+
+
+class Block:
+    __type: str
+    __position: Vector3
+
+    def __init__(self, type: str, position: Vector3) -> None:
+        self.__type = type
+        self.__position = position
+
+    @property
+    def type(self) -> str:
+        return self.__type
+
+    @property
+    def position(self) -> Vector3:
+        return self.__position
+
+    def __str__(self) -> str:
+        return f"Player {self.__type} at {self.__position}"
+
+
 class Perception:
     def __init__(self, label: str, value: float) -> None:
         self.__label = label
@@ -46,7 +87,7 @@ class Perceptron:
 
 class Context:
     __indexed_by_label: Dict[str, List[Perception]]
-    __indexed_by_blocks: Dict[str, List[Vector3]]
+    __indexed_by_blocks: Dict[str, List[Block]]
 
     def __init__(self) -> None:
         self.__indexed_by_label = {}
@@ -58,15 +99,15 @@ class Context:
         self.__indexed_by_label[perception.label].append(perception)
 
     def add_block_perception(self, block_perception: Perception) -> None:
-        if block_perception.label != "BLOCK":
+        if block_perception.label != "BLOCK" or not isinstance(block_perception.value, Block):
             raise Exception()
 
         self.add_perception(block_perception)
 
-        if block_perception.value[0] not in self.__indexed_by_blocks:
-            self.__indexed_by_blocks[block_perception.value[0]] = []
+        if block_perception.value.type not in self.__indexed_by_blocks:
+            self.__indexed_by_blocks[block_perception.value.type] = []
 
-        self.__indexed_by_blocks[block_perception.value[0]].append(block_perception.value[1])
+        self.__indexed_by_blocks[block_perception.value.type].append(block_perception.value)
 
     def get_perceptions_by_label(self, label: str) -> List[Perception]:
         if label in self.__indexed_by_label:
@@ -150,24 +191,3 @@ class Practice:
 
     def __str__(self) -> str:
         return f"{self.__name} [{self.__salience}]"
-
-
-class Player:
-
-    __name: str
-    __position: Vector3
-
-    def __init__(self, name: str, position: Vector3) -> None:
-        self.__name = name
-        self.__position = position
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @property
-    def position(self) -> Vector3:
-        return self.__position
-
-    def __str__(self) -> str:
-        return f"Player {self.__name} at {self.__position}"
