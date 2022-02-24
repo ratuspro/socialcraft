@@ -19,12 +19,11 @@ from practices import (
     LookToRandomPlayer,
     ChoopWood,
     Context,
-    Perception,
 )
-from interpreters import PeopleInterpreterManager, PeopleCloseBy, BlockInterpreterManager, WoodCloseBy
 
-
-from agent import perceive_blocks, perceive_players
+from perceptions import Perception, perceive_blocks, perceive_players, perceive_world_state
+from perceptions.interpreters.block import BlockInterpreterManager, IsBlockCloseBy
+from perceptions.interpreters.people import PeopleInterpreterManager, PeopleCloseBy
 
 
 def ConvertToDirection(yaw, pitch):
@@ -105,7 +104,7 @@ practices.append(
 practices.append(
     ChoopWood(
         bot,
-        [Perceptron("ISDAY", 0.5, 0), Perceptron("ISNIGHT", -1, 0), Perceptron("WOODINSIGHT", 1, 0)],
+        [Perceptron("ISDAY", 0.5, 0), Perceptron("ISNIGHT", -1, 0), Perceptron("WOOD_CLOSE_BY", 2, 0)],
     )
 )
 
@@ -115,7 +114,8 @@ p_interpreter_manager.add_interpreter(PeopleCloseBy(10, "PLAYER_CLOSE"))
 p_interpreter_manager.add_interpreter(PeopleCloseBy(20, "PLAYER_FAR"))
 
 b_interpreter_manager = BlockInterpreterManager(bot)
-b_interpreter_manager.add_interpreter(WoodCloseBy())
+b_interpreter_manager.add_interpreter(IsBlockCloseBy("WOOD_CLOSE_BY", ["Oak Log"]))
+b_interpreter_manager.add_interpreter(IsBlockCloseBy("BED_CLOSE_BY", ["Red Bed"]))
 
 
 @AsyncTask(start=True)
@@ -125,6 +125,7 @@ def async_basic_agent_loop(task):
 
     while not task.stopping:
 
+        logger.info("🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹")
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
@@ -147,31 +148,21 @@ def async_basic_agent_loop(task):
 
         # Perceive Time
         p_start_time = datetime.now()
-        time_of_day = int(bot.time.timeOfDay)
-        is_day = bool(bot.time.isDay)
-        context.add_perception(Perception("TIME", time_of_day / 24000))
-        context.add_perception(Perception("ISDAY", 1 if is_day else 0))
-        context.add_perception(Perception("ISNIGHT", 1 if not is_day else 0))
+        world_state = perceive_world_state(bot)
+        for state in world_state:
+            context.add_perception(state)
         p_delta = datetime.now() - p_start_time
         p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
-        logger.debug(f"Perceiving time took {p_milliseconds} miliseconds")
+        logger.debug(f"Perceiving time and weather took {p_milliseconds} miliseconds")
 
-        # Perceive Weather
-        p_start_time = datetime.now()
-        context.add_perception(Perception("RAIN", bot.rainState))
-        context.add_perception(Perception("THUNDER", bot.thunderState))
-        p_delta = datetime.now() - p_start_time
-        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
-        logger.debug(f"Perceiving weather took {p_milliseconds} miliseconds")
-
-        # Perceive & Interpret Blocks
+        # Interpret Blocks
         p_start_time = datetime.now()
         blocks = list(blocks_by_position.values())
         block_interpretations = b_interpreter_manager.process(blocks)
         for interpretation in block_interpretations:
             context.add_perception(interpretation)
         for block in blocks:
-            context.add_block_perception(Perception("BLOCK", block))
+            context.add_block_perception(Perception("BLOCK", 1, block))
         p_delta = datetime.now() - p_start_time
         p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
         logger.debug(f"Interpreting blocks took {p_milliseconds} miliseconds")
@@ -182,41 +173,43 @@ def async_basic_agent_loop(task):
         for interpretation in player_interpretations:
             context.add_perception(interpretation)
         for player in players:
-            context.add_perception(Perception("PLAYER", player))
+            context.add_perception(Perception("PLAYER", 1, player))
         p_delta = datetime.now() - p_start_time
         p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
         logger.debug(f"Interpreting people took {p_milliseconds} miliseconds")
 
         all_perceptions = context.get_perceptions()
         for perception in all_perceptions:
-            print("{:<30} {:<5}".format(perception.label, str(perception.value)))
+            logger.debug(perception)
 
         # Update Practices Saliences
         for practice in practices:
             practice.update_salience(context)
+
+        random.shuffle(practices)
         practices.sort(reverse=True, key=lambda practice: practice.salience)
 
         for practice in practices:
-            print("{:<30} {:<5}".format(practice.name, practice.salience))
+            logger.debug("{:<30} {:<5}".format(practice.name, practice.salience))
 
         # Update Ongoing Practice
         if ongoing_practice is not None:
             if not ongoing_practice.is_possible() or ongoing_practice.has_ended():
-                print(f"Exit Practice {ongoing_practice}")
+                logger.info(f"🛑 Exit Practice {ongoing_practice}")
                 ongoing_practice.exit()
                 ongoing_practice = None
             else:
-                print(f"Update Practice {ongoing_practice}")
+                logger.info(f"🔃 Update Practice {ongoing_practice}")
                 ongoing_practice.update()
         else:
             if practices[0].salience > 0:
                 ongoing_practice = practices[0]
-                print(f"Start Practice {ongoing_practice}")
+                logger.info(f"🚀 Start Practice {ongoing_practice}")
                 ongoing_practice.setup(context)
                 if ongoing_practice.is_possible():
                     ongoing_practice.start()
             else:
-                print("Do nothing")
+                logger.info("⭕ Do nothing")
 
         time_spent = datetime.now() - start_time
         milliseconds = (time_spent.days * 24 * 60 * 60 + time_spent.seconds) * 1000 + time_spent.microseconds / 1000.0

@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Tuple, Dict, List
 from javascript import eval_js
 from vector3 import Vector3
-from practices import Player, Block
+from .models import Player, Block, Perception
 
 
 def perceive_blocks(bot) -> Dict[Vector3, Block]:
@@ -56,11 +57,11 @@ def perceive_players(bot) -> List[Player]:
         """
         for (const entity of Object.values(bot.entities)) {
             if (entity === bot.entity || entity.type != 'player') {
-            continue
+                continue
             }
 
             if(bot.entity.position.distanceSquared(entity.position) < 100){
-                await players.append(entity)
+                await players.append([entity.username, entity.position.x,entity.position.y,entity.position.z])
             } 
         }
     """
@@ -68,5 +69,17 @@ def perceive_players(bot) -> List[Player]:
 
     output = []
     for player in players:
-        output.append(Player(player.username, Vector3(player.position)))
+        output.append(Player(player[0], Vector3(player[1], player[2], player[3])))
     return output
+
+
+def perceive_world_state(bot) -> List[Perception]:
+    perceptions = []
+    time_of_day = int(bot.time.timeOfDay)
+    is_day = bool(bot.time.isDay)
+    perceptions.append(Perception("TIME", time_of_day / 24000, None))
+    perceptions.append(Perception("ISDAY", 1 if is_day else 0, None))
+    perceptions.append(Perception("ISNIGHT", 1 if not is_day else 0, None))
+    perceptions.append(Perception("RAIN", bot.rainState, None))
+    perceptions.append(Perception("THUNDER", bot.thunderState, None))
+    return perceptions

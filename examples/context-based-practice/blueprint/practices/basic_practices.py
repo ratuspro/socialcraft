@@ -3,8 +3,8 @@ from tracemalloc import start
 
 from setuptools import setup
 from vector3 import Vector3
-from .practice import Perception, Practice, Perceptron, Context
-
+from .practice import Practice, Perceptron, Context
+from perceptions import Block
 from javascript import require, eval_js
 
 pathfinder = require("mineflayer-pathfinder")
@@ -15,7 +15,6 @@ Vec3 = require("vec3")
 class AvoidPeoplePractice(Practice):
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "AvoidPeoplePractice")
-        self.__target_position = None
 
     def setup(self, context: Context) -> None:
         super().setup(context)
@@ -50,7 +49,6 @@ class GoToHousePractice(Practice):
 
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "GoToHousePractice")
-        self.__target_bed = None
 
     def setup(self, context: Context) -> None:
         super().setup(context)
@@ -81,7 +79,6 @@ class SleepPractice(Practice):
 
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "SleepPractice")
-        self.__target_bed = None
 
     def setup(self, context: Context):
         super().setup(context)
@@ -119,7 +116,6 @@ class WanderAroundPractice(Practice):
 
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "WanderAround", 5)
-        self.__target_position = None
 
     def setup(self, context: Context):
         super().setup(context)
@@ -203,66 +199,43 @@ class LookToRandomPlayer(Practice):
 
 
 class ChoopWood(Practice):
+
+    __target_wood_block: Block
+
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "ChoopWood")
-        self.__target_wood_block = None
 
     def setup(self, context: Context) -> None:
         super().setup(context)
         blocks = context.get_block_positions_by_type("Oak Log")
         if len(blocks) > 0:
-            self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
+            self.__target_wood_block = random.choice(blocks)
 
     def start(self):
         super().start()
-        print(self._bot.pathfinder)
-        self._bot.pathfinder.setGoal(
-            pathfinder.goals.GoalBreakBlock(
-                self.__target_wood_block.position.x,
-                self.__target_wood_block.position.y,
-                self.__target_wood_block.position.z,
-                self._bot,
-            )
+        goal = pathfinder.goals.GoalBreakBlock(
+            self.__target_wood_block.position.x,
+            self.__target_wood_block.position.y,
+            self.__target_wood_block.position.z,
+            self._bot,
         )
+        print(self.__target_wood_block.position)
+
+        self._bot.pathfinder.setGoal(goal)
 
     def update(self):
         super().update()
-        if self._bot.entity.position.distanceSquared(self.__target_wood_block.position) < 1:
-            self._bot.dig(self.__target_wood_block)
+        position = Vector3(self._bot.entity.position)
+        if position.distanceSquaredTo(self.__target_wood_block.position) < 16:
+            block = self._bot.blockAt(self.__target_wood_block.position.toVec3())
+            self._bot.dig(block)
 
     def is_possible(self) -> bool:
-        return self.__target_wood_block is not None
-
-    def has_ended(self) -> bool:
-        return super().has_ended()
-
-    def exit(self):
-        super().exit()
-
-
-class TakeBlock(Practice):
-
-    __target_block_position: Vector3
-
-    def __init__(self, bot, percepton: list[Perceptron]) -> None:
-        super().__init__(bot, percepton, "TakeBlock")
-        self.__target_block_position = None
-
-    def setup(self, context: Context) -> None:
-        super().setup(context)
-        blocks = list(self._bot.kb["wood_blocks"])
-        if len(blocks) > 0:
-            self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
-
-    def start(self):
-        super().start()
-        self._bot.dig(self.__target_wood_block)
-
-    def update(self):
-        super().update()
-
-    def is_possible(self) -> bool:
-        return self.__target_wood_block is not None
+        print(self.__target_wood_block is not None)
+        can_dig = self._bot.canDigBlock(self._bot.blockAt(self.__target_wood_block.position.toVec3()))
+        print(can_dig)
+        print(self._bot.blockAt(self.__target_wood_block.position.toVec3()))
+        return self.__target_wood_block is not None and can_dig
 
     def has_ended(self) -> bool:
         return super().has_ended()

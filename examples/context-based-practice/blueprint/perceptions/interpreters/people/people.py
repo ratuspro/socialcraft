@@ -1,6 +1,6 @@
 from abc import ABC, abstractclassmethod
 from typing import List
-from practices import Perception, Player
+from ...models import Player, Perception
 from vector3 import Vector3
 
 
@@ -23,7 +23,7 @@ class PeopleCloseBy(PeopleInterpreter):
         position = Vector3(bot.entity.position)
         for player in players:
             if player.position.distanceSquaredTo(position) < self.__distance_squared:
-                return [Perception(self.__perception_label, 1)]
+                return [Perception(self.__perception_label, 1, None)]
         return []
 
 

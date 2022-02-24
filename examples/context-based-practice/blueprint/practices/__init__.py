@@ -1,4 +1,4 @@
-from .practice import Perception, Perceptron, Practice, Context, Player, Block
+from .practice import Perceptron, Practice, Context
 from .basic_practices import (
     AvoidPeoplePractice,
     GoToHousePractice,

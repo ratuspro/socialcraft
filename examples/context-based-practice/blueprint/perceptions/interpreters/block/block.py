@@ -1,6 +1,6 @@
 from abc import ABC, abstractclassmethod
 from typing import List
-from practices import Perception, Block
+from ...models import Block, Perception
 
 
 class BlockInterpreter(ABC):
@@ -27,10 +27,17 @@ class BlockInterpreterManager:
         return perceptions
 
 
-class WoodCloseBy(BlockInterpreter):
+class IsBlockCloseBy(BlockInterpreter):
+    __label: str
+    __block_types: List[str]
+
+    def __init__(self, label: str, block_types: List[str]) -> None:
+        super().__init__()
+        self.__label = label
+        self.__block_types = block_types
+
     def interpret(self, bot, blocks: List[Block]) -> List[Perception]:
-        wood_types = ["Oak Log"]
         for block in blocks:
-            if block.type in wood_types:
-                return [Perception("WOOD_IN_SIGHT", 1)]
+            if block.type in self.__block_types:
+                return [Perception(self.__label, 1, None)]
         return []
