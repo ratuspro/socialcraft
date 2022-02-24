@@ -13,7 +13,6 @@ from practices import (
     AvoidPeoplePractice,
     GoToHousePractice,
     Perceptron,
-    PerceptionLabel,
     SleepPractice,
     WanderAroundPractice,
     RandomlyLookAround,
@@ -22,6 +21,8 @@ from practices import (
     Context,
     Perception,
 )
+from interpreters import PeopleInterpreterManager, PeopleCloseBy
+
 
 from agent import perceive_blocks, perceive_players
 
@@ -104,9 +105,14 @@ practices.append(
 practices.append(
     ChoopWood(
         bot,
-        [Perceptron("ISDAY", 0.5, 0), Perceptron("WOODINSIGHT", 1, 0)],
+        [Perceptron("ISDAY", 0.5, 0), Perceptron("ISNIGHT", -1, 0), Perceptron("WOODINSIGHT", 1, 0)],
     )
 )
+
+p_interpreter_manager = PeopleInterpreterManager(bot)
+p_interpreter_manager.add_interpreter(PeopleCloseBy(5, "PLAYER_VERY_CLOSE"))
+p_interpreter_manager.add_interpreter(PeopleCloseBy(10, "PLAYER_CLOSE"))
+p_interpreter_manager.add_interpreter(PeopleCloseBy(20, "PLAYER_FAR"))
 
 
 @AsyncTask(start=True)
@@ -119,18 +125,43 @@ def async_basic_agent_loop(task):
         logger.info(f"Start Agent Loop at {bot.time.time}")
         start_time = datetime.now()
 
-        blocks_by_position = perceive_blocks(bot)
-        players = perceive_players(bot)
-
-        # Perceive
+        # Create Context
         context = Context()
+
+        # Perceive Blocks
+        p_start_time = datetime.now()
+        blocks_by_position = perceive_blocks(bot)
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Perceiving blocks took {p_milliseconds} miliseconds")
+
+        # Perceive People
+        p_start_time = datetime.now()
+        players = perceive_players(bot)
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Perceiving players took {p_milliseconds} miliseconds")
+
+        # Perceive Time
+        p_start_time = datetime.now()
         context.add_perception(Perception("TIME", bot.time.timeOfDay / 24000))
         context.add_perception(Perception("ISDAY", 1 if bot.time.isDay else 0))
         context.add_perception(Perception("ISNIGHT", 1 if not bot.time.isDay else 0))
         context.add_perception(Perception("WEEKDAY", bot.time.day % 7))
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Perceiving time took {p_milliseconds} miliseconds")
+
+        # Perceive Weather
+        p_start_time = datetime.now()
         context.add_perception(Perception("RAIN", bot.rainState))
         context.add_perception(Perception("THUNDER", bot.thunderState))
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Perceiving weather took {p_milliseconds} miliseconds")
 
+        # Perceive & Interpret Blocks
+        p_start_time = datetime.now()
         for block_pos, type in blocks_by_position.items():
             context.add_block_perception(Perception("BLOCK", (type, block_pos)))
 
@@ -143,9 +174,24 @@ def async_basic_agent_loop(task):
                 and block_pos.xzDistanceTo(bot.kb["bed_position"]) < 2
             ):
                 context.add_perception(Perception("OWNBEDVISIBLE", 1))
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Interpreting blocks took {p_milliseconds} miliseconds")
 
-        for player_pos, player_name in players.items():
-            context.add_perception(Perception("PLAYER", (player_pos, player_name)))
+        # Perceive & Interpret People
+        p_start_time = datetime.now()
+        player_interpretations = p_interpreter_manager.process(players)
+        for interpretation in player_interpretations:
+            context.add_perception(interpretation)
+        for player in players:
+            context.add_perception(Perception("PLAYER", player))
+        p_delta = datetime.now() - p_start_time
+        p_milliseconds = (p_delta.days * 24 * 60 * 60 + p_delta.seconds) * 1000 + p_delta.microseconds / 1000.0
+        logger.debug(f"Interpreting people took {p_milliseconds} miliseconds")
+
+        all_perceptions = context.get_perceptions()
+        for perception in all_perceptions:
+            print("{:<30} {:<5}".format(perception.label, str(perception.value)))
 
         # Update Practices Saliences
         for practice in practices:

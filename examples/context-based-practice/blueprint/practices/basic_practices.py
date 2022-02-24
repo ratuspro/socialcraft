@@ -203,27 +203,26 @@ class LookToRandomPlayer(Practice):
 
 
 class ChoopWood(Practice):
-
-    __target_wood_block: Vector3
-
     def __init__(self, bot, percepton: list[Perceptron]) -> None:
         super().__init__(bot, percepton, "ChoopWood")
         self.__target_wood_block = None
 
     def setup(self, context: Context) -> None:
         super().setup(context)
-        for perception in context.get_perceptions():
-            print(perception)
-
         blocks = context.get_block_positions_by_type("Oak Log")
-        print(blocks)
         if len(blocks) > 0:
             self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
 
     def start(self):
         super().start()
-        eval_js(
-            """self._bot.pathfinder.setGoal(pathfinder.goals.GoalBreakBlock(self.__target_wood_block.position.x, self.__target_wood_block.position.y, self.__target_wood_block.position.z, self._bot)"""
+        print(self._bot.pathfinder)
+        self._bot.pathfinder.setGoal(
+            pathfinder.goals.GoalBreakBlock(
+                self.__target_wood_block.position.x,
+                self.__target_wood_block.position.y,
+                self.__target_wood_block.position.z,
+                self._bot,
+            )
         )
 
     def update(self):
@@ -253,13 +252,11 @@ class TakeBlock(Practice):
         super().setup(context)
         blocks = list(self._bot.kb["wood_blocks"])
         if len(blocks) > 0:
-            print(blocks)
             self.__target_wood_block = self._bot.blockAt(random.choice(blocks).toVec3())
-            print(self.__target_wood_block)
 
     def start(self):
         super().start()
-        print(self._bot.dig(self.__target_wood_block))
+        self._bot.dig(self.__target_wood_block)
 
     def update(self):
         super().update()

@@ -2,28 +2,16 @@ from abc import abstractmethod
 from datetime import datetime
 from typing import Dict, List
 from vector3 import Vector3
-
-
-class PerceptionLabel:
-    TIME = 0
-    WEEKDAY = 1
-    RAIN = 2
-    THUNDER = 3
-    ISDAY = 4
-    ISNIGHT = 5
-    OWNBEDVISIBLE = 6
-    WOODINSIGHT = 7
-    BLOCK = 8
-    PLAYER = 9
+import math
 
 
 class Perception:
-    def __init__(self, label: PerceptionLabel, value: float) -> None:
+    def __init__(self, label: str, value: float) -> None:
         self.__label = label
         self.__value = value
 
     @property
-    def label(self) -> PerceptionLabel:
+    def label(self) -> str:
         return self.__label
 
     @property
@@ -90,7 +78,7 @@ class Context:
             return self.__indexed_by_blocks[block_type]
         return []
 
-    def get_perceptions(self) -> List[str]:
+    def get_perceptions(self) -> List[Perception]:
         all_perceptions = []
         for _, perceptions in self.__indexed_by_label.items():
             all_perceptions.extend(perceptions)
@@ -109,6 +97,10 @@ class Practice:
         self.__start_time = None
         self.__timeout = timeout
 
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + math.exp(-x))
+
     def update_salience(self, context: Context) -> float:
         new_salience = 0
 
@@ -118,6 +110,7 @@ class Practice:
 
                 new_salience += perceptron.weight * perception.value + perceptron.bias
 
+        new_salience = Practice.sigmoid(new_salience)
         delta = new_salience - self.__salience
         self.__salience = new_salience
         return delta
@@ -157,3 +150,24 @@ class Practice:
 
     def __str__(self) -> str:
         return f"{self.__name} [{self.__salience}]"
+
+
+class Player:
+
+    __name: str
+    __position: Vector3
+
+    def __init__(self, name: str, position: Vector3) -> None:
+        self.__name = name
+        self.__position = position
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
+    @property
+    def position(self) -> Vector3:
+        return self.__position
+
+    def __str__(self) -> str:
+        return f"Player {self.__name} at {self.__position}"

@@ -31,6 +31,12 @@ class Vector3:
         dz = target.z - self.z
         return math.sqrt(dx * dx + dy * dy + dz * dz)
 
+    def distanceSquaredTo(self, target) -> float:
+        dx = target.x - self.x
+        dy = target.y - self.y
+        dz = target.z - self.z
+        return dx * dx + dy * dy + dz * dz
+
     def xzDistanceTo(self, target) -> float:
         dx = target.x - self.x
         dz = target.z - self.z

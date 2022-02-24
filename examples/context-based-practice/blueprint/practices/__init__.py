@@ -1,4 +1,4 @@
-from .practice import Perception, PerceptionLabel, Perceptron, Practice, Context
+from .practice import Perception, Perceptron, Practice, Context, Player
 from .basic_practices import (
     AvoidPeoplePractice,
     GoToHousePractice,
@@ -6,5 +6,5 @@ from .basic_practices import (
     WanderAroundPractice,
     RandomlyLookAround,
     LookToRandomPlayer,
-    ChoopWood
+    ChoopWood,
 )

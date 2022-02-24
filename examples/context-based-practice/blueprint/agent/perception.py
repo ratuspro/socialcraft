@@ -1,6 +1,7 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from javascript import eval_js
 from vector3 import Vector3
+from practices import Player
 
 
 def perceive_blocks(bot) -> Dict[Vector3, str]:
@@ -47,7 +48,7 @@ def perceive_blocks(bot) -> Dict[Vector3, str]:
     return output
 
 
-def perceive_players(bot):
+def perceive_players(bot) -> List[Player]:
     players = []
     eval_js(
         """
@@ -63,7 +64,7 @@ def perceive_players(bot):
     """
     )
 
-    output = {}
+    output = []
     for player in players:
-        output[player.username] = player.position
+        output.append(Player(player.username, Vector3(player.position)))
     return output
