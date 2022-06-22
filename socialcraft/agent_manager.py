@@ -2,6 +2,8 @@
 This module defines the AgentManager class
 """
 from cmath import e
+from enum import auto
+import string
 from typing import Dict, Optional
 import docker
 from docker.models.containers import Container
@@ -10,6 +12,7 @@ from docker.models.images import Image
 from .agent import Agent
 import requests
 import time
+import pika
 
 
 def append_if(entry: str, original: list, test: bool) -> list:
@@ -103,6 +106,70 @@ class AgentCache:
         self.__cache.pop(name)
 
 
+class MessageBrooker:
+
+    def __init__(self, docker_client) -> None:
+
+        # 1. Create new Message Brooker container
+        socialcraft_brookers = docker_client.containers.list(
+            filters={"name": "socialcraft-brooker"}, all=True
+        )
+
+        if len(socialcraft_brookers) > 0:
+            for brooker in socialcraft_brookers:
+                brooker.remove(force=True)
+
+        docker_client.containers.run(
+            "rabbitmq:management",
+            detach=True,
+            ports={"5672/tcp": 5672, "15672/tcp": 15672},
+            name="socialcraft-brooker",
+            environment={
+                "RABBITMQ_DEFAULT_USER": "socialcraft",
+                "RABBITMQ_DEFAULT_PASS": "redstone",
+            },
+        )
+
+        # 2. Wait for the Message Brooker to start
+        while True:
+            try:
+                requests.get(f"http://host.docker.internal:15672/api")
+                break
+            except requests.exceptions.ConnectionError as e:
+                time.sleep(3)
+
+        # 3. Setup queue for state changes
+        credentials = pika.PlainCredentials("socialcraft", "redstone")
+        self.__connection = pika.BlockingConnection(
+            pika.ConnectionParameters("localhost", credentials=credentials)
+        )
+        self.__channel = self.__connection.channel()
+        self.__channel.exchange_declare(exchange="agent_state",exchange_type="direct")
+
+
+    def add_agent(self, name):
+
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/users/{name}",
+            json={"password": name, "tags": "administrator"},
+            auth=("socialcraft", "redstone"),
+        )
+
+        res = requests.put(
+            f"http://host.docker.internal:15672/api/permissions/%2f/{name}",
+            json={"configure": ".*", "write": ".*", "read": ".*"},
+            auth=("socialcraft", "redstone"),
+        )
+
+        result = self.__channel.queue_declare(queue=name,auto_delete=False)
+        self.__channel.queue_bind(exchange='agent_state', queue=name, routing_key=name)
+
+
+    def set_agent_variable(self, name:string, variable: string, value: object) -> None:
+        self.__channel.basic_publish(exchange='agent_state', routing_key=name, body=f"{variable}:=={value}")
+       
+        
+
 class AgentManager:
     """
     The AgentManager class supervises the deployment of agents
@@ -134,7 +201,7 @@ class AgentManager:
             "password": minecraft_password,
         }
 
-        self.__setup_messaging()
+        self.__message_broker : MessageBrooker = MessageBrooker(self.__docker_client)
 
     def __get_docker_client(self) -> Optional[DockerClient]:
         return self.__docker_client
@@ -178,40 +245,20 @@ class AgentManager:
         if self.__cache.has(name):
             self.__cache.erase(name)
 
-        container_envs = {}
+        container_envs = {
+            "AGENT_NAME": name,
+            "RABBITMQ_HOST": "host.docker.internal",
+            "RABBITMQ_PORT": "5672",
+            "RABBITMQ_VIRTUAL_HOST": "/"
+        }
 
-        if self.__minecraft_config["host"] is not None:
-            container_envs["MINECRAFT_HOST"] = self.__minecraft_config["host"]
-
-        if self.__minecraft_config["username"] is not None:
-            container_envs["MINECRAFT_USERNAME"] = self.__minecraft_config["username"]
-
-        if self.__minecraft_config["password"] is not None:
-            container_envs["MINECRAFT_PASSWORD"] = self.__minecraft_config["password"]
-
-        if self.__minecraft_config["port"] is not None:
-            container_envs["MINECRAFT_PORT"] = self.__minecraft_config["port"]
-
-        if self.__minecraft_config["version"] is not None:
-            container_envs["MINECRAFT_VERSION"] = self.__minecraft_config["version"]
-
-        if self.__minecraft_config["auth"] is not None:
-            container_envs["MINECRAFT_AUTH"] = self.__minecraft_config["auth"]
-
-        container_envs["AGENT_NAME"] = name
-
-        container_envs["RABBITMQ_HOST"] = "host.docker.internal"
-        container_envs["RABBITMQ_PORT"] = "5672"
-        container_envs["RABBITMQ_VIRTUAL_HOST"] = "/"
-
-        for custom_env_name, custom_env_value in custom_envs.items():
-            container_envs[f"SOCIALCRAFT_INIT_{custom_env_name}"] = custom_env_value
-
-        for blueprint_env in blueprint.environment_variables:
-            if blueprint_env not in container_envs:
-                container_envs[blueprint_env] = blueprint.environment_variables[blueprint_env]
-
-        self.__add_agent_to_brooker(name)
+        self.__message_broker.add_agent(name)
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_HOST", self.__minecraft_config["host"])
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_USERNAME", self.__minecraft_config["username"])
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_PASSWORD", self.__minecraft_config["password"])
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_PORT", self.__minecraft_config["port"])
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_VERSION", self.__minecraft_config["version"])
+        self.__message_broker.set_agent_variable(name, "MINECRAFT_AUTH", self.__minecraft_config["auth"])
 
         agent_container = self.__get_docker_client().containers.create(
             blueprint.image,
@@ -365,43 +412,9 @@ class AgentManager:
 
         return blueprint
 
-    def __setup_messaging(self):
-
-        socialcraft_brookers = self.__get_docker_client().containers.list(
-            filters={"name": "socialcraft-brooker"}, all=True
-        )
-
-        if len(socialcraft_brookers) > 0:
-            for brooker in socialcraft_brookers:
-                brooker.remove(force=True)
-
-        self.__get_docker_client().containers.run(
-            "rabbitmq:management",
-            detach=True,
-            ports={"5672/tcp": 5672, "15672/tcp": 15672},
-            name="socialcraft-brooker",
-            environment={
-                "RABBITMQ_DEFAULT_USER": "socialcraft",
-                "RABBITMQ_DEFAULT_PASS": "redstone",
-            },
-        )
-
-        while True:
-            try:
-                requests.get(f"http://host.docker.internal:15672/api")
-                return
-            except requests.exceptions.ConnectionError as e:
-                time.sleep(3)
-
-    def __add_agent_to_brooker(self, name):
-        res = requests.put(
-            f"http://host.docker.internal:15672/api/users/{name}",
-            json={"password": name, "tags": "administrator"},
-            auth=("socialcraft", "redstone"),
-        )
-
-        res = requests.put(
-            f"http://host.docker.internal:15672/api/permissions/%2f/{name}",
-            json={"configure": ".*", "write": ".*", "read": ".*"},
-            auth=("socialcraft", "redstone"),
-        )
+    def set_agent_variable(self, name: str, variable_name:str, variable_value: str) -> None:
+        """
+        Sets the agent variable
+        """
+        
+        self.__message_broker.set_agent_variable(name, variable_name,variable_value)
